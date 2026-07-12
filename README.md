@@ -1,95 +1,183 @@
 # guarded_eval
 
-**Does the robot actually succeed, or just look like it did?**
+A live ROS 2 demo of Goodhart's law: two simulated 2-link arms attempt the
+same reach-and-confirm task side by side. One arm's controller is selected
+purely by a cheap proxy score every generation (an RSI-style loop, no
+ground-truth check anywhere). The other is gated on a cheap ground-truth
+probe before being ranked by the same proxy. Watch what happens to each
+one's *real* success rate over time, not just its proxy score.
 
-Two identical 2-link arms attempt the same reach-and-grab task, live, side
-by side. One is bred generation after generation purely to maximize a cheap
-proxy score. The other has to clear a cheap ground-truth check *before* the
-same proxy score is even allowed to rank it. Same starting population, same
-tasks, same mutation rate — the only difference is whether ground truth
-gets a vote.
+The selection mechanics and the evaluator split are the same ones used in the
+offline numpy version of this experiment, rebuilt here as a real ROS 2 package
+with two live nodes and a browser dashboard over rosbridge.
 
-<p align="center">
-  <img src="guarded_eval/demo.gif" width="640" alt="naive arm's gripper closes short of the target and stays red; guarded arm reaches the target, holds, and flashes green" />
-</p>
-<p align="center"><sub>real rollout of both champions from a seed-9 run — not staged. naive's gripper closes early and stops; guarded reaches, dwells, and confirms.</sub></p>
+## What's real vs. synthetic here
 
-## The one-sentence version
+- **Real**: ROS 2 nodes, topics, a launch file, a genuine evolutionary
+  selection loop running generation-by-generation on a wall-clock timer, and
+  a live browser dashboard driven entirely by rosbridge messages.
+- **Synthetic**: the arm is a 2-link planar kinematic model (`core.py`'s
+  `fk()`), not a physics simulation, no forces, no collisions, no gravity.
+  The "cheap proxy" and "ground-truth" evaluators are both synthetic
+  functions over that same kinematic model, not a real learned simulator and
+  a real robot. The point is the selection *mechanism*, not robot realism.
 
-Naive selection optimizes what it's told to; guarded selection is bred to
-survive a check it wasn't directly optimized against — and only one of them
-turns out to have actually learned the task.
+## Prerequisites
 
-## What's being measured
+ROS 2 (Humble, Iron, or Jazzy), `colcon`, and the `rosbridge_server` package.
+If this machine has no ROS 2 installed and you have no sudo (as was the case
+when this package was built and verified), see "No-sudo ROS 2 via RoboStack"
+below for a real, working alternative.
 
-| | naive | guarded |
-|---|---|---|
-| ranked by | `proxy_score` only | `proxy_score`, but only among genomes that pass `cheap_gate` |
-| ground truth ever consulted? | no | yes, cheaply, every generation |
-| failure mode | proxy climbs, real task performance never appears | gate starves early on some seeds, but recovers |
-| unfilled elite slots | mutate the proxy leaders again | **fresh random genomes** — never backfilled with more proxy-only winners |
+## Build and run
 
-`proxy_score`: one clean, noise-free rollout, scored by closest approach to
-the target. Never checks whether the arm actually grabbed and held it.
-
-`truth_score` / `cheap_gate`: several *noisy* rollouts, scored by a strict
-event — gripper closed, within radius, held for 5 consecutive ticks. A
-policy can max out `proxy_score` by hovering near the target forever
-without ever passing this.
-
-That gap between the two scores is the entire experiment. Everything else
-— the arm, the ROS topics, the dashboard — exists to make that gap watchable.
-
-## Real results, not tuned to fit the story
-
-A 26-generation run at seed 9, held-out evaluation tasks neither selection
-loop ever sees:
-
-```
-gen  0   naive proxy=-0.590 truth=0.000  |  guarded proxy=-0.590 truth=0.000
-gen  9   naive proxy=-0.166 truth=0.000  |  guarded proxy=-0.650 truth=0.056  passers=1/24
-gen 18   naive proxy=-0.096 truth=0.000  |  guarded proxy=-0.515 truth=0.083  passers=6/24
-gen 26   naive proxy=-0.096 truth=0.000  |  guarded proxy=-0.247 truth=0.056  passers=10/24
-```
-
-Naive's proxy score genuinely improves the entire run. Its real success
-rate never leaves zero — not a collapse from a peak, it simply never finds
-the confirming behavior at all, while getting steadily "better" by its own
-metric. Guarded's gate starts starved (0 passers for several generations)
-then recovers, and its real success rate becomes reliably nonzero once it
-does.
-
-Not every seed tells this clean a story — seed 7 is a disclosed failure
-mode where the gate itself starves for the entire run and guarded
-degenerates into random search too. That's in `guarded_eval/README.md`,
-left in rather than tuned away.
-
-## Run it
-
-A full ROS 2 package (`ament_python`, Humble/Iron/Jazzy) — two live nodes
-running the selection loops and the arm simulation, a launch file, and a
-browser dashboard over rosbridge. Only `numpy` + stock ROS message types,
-no custom `.msg` files.
+**Recommended: `run_demo.sh`**, at the workspace root. It kills any of your
+own orphaned instances from previous runs, scans for a genuinely free port
+with a real bind test (not `ss`/`lsof`, which can miss another user's
+process), launches with that port and `ROS_DOMAIN_ID=77`, and prints the
+exact dashboard URL to open:
 
 ```bash
-cd guarded_eval
-colcon build --symlink-install   # from a workspace root containing this as src/guarded_eval
+cd guarded_eval_ws
+colcon build --symlink-install   # only needed after editing the package
+bash run_demo.sh
+```
+
+It prints something like:
+```
+DASHBOARD: set WS_PORT to 19091 and open dashboard.html
+  -> dashboard.html?port=19091
+```
+Serve the dashboard folder and open exactly that URL (see "Then open the
+dashboard" below) — no manual port bookkeeping needed.
+
+**Manual launch**, if you want direct control over seed/generation count:
+
+```bash
+cd guarded_eval_ws
+colcon build --symlink-install
 source install/setup.bash
-bash run_demo.sh                 # scans for a free rosbridge port, launches everything
+ros2 launch guarded_eval demo.launch.py
+# or, to change the seed / generation count:
+ros2 launch guarded_eval demo.launch.py seed:=7 max_generations:=20
+# if port 9090 is already taken by something else (common on a shared machine):
+ros2 launch guarded_eval demo.launch.py port:=19090
 ```
 
-See [`guarded_eval/README.md`](guarded_eval/) for the full architecture,
-no-sudo ROS 2 setup via RoboStack/conda, topic reference, and seed notes.
+**On a shared/multi-user machine, set a unique `ROS_DOMAIN_ID` first.** This
+package was built and verified on a shared research server where the default
+domain (0) is visible machine-wide over UDP multicast; with the default
+domain, publishers and subscribers were registered correctly (`ros2 topic
+list`/`info` worked, showed real publisher/subscriber counts) but message
+delivery to a *freshly-started* subscriber was unreliable, almost certainly
+DDS discovery contention with other users' unrelated ROS 2 traffic on the
+same domain. Picking a private domain fixed it completely and consistently:
 
-## Layout
+```bash
+export ROS_DOMAIN_ID=77   # any number 0-232 not in use by others on the machine; set
+                           # it in every terminal you use for this package, including
+                           # the one running the dashboard's rosbridge connection
+ros2 launch guarded_eval demo.launch.py
+```
+
+**A separate, non-bug thing to know if you poke topics manually while it's
+running**: `selection_node` stops publishing once `gen` reaches
+`max_generations` (30 by default, ~30 seconds in) and goes idle until you
+publish a `reset`. A `ros2 topic echo /metrics --once` run *after* it's
+already finished will hang until you reset it, that's not a hang in the
+node, the run is just over. `ros2 topic pub /control std_msgs/String
+'{data: "{\"cmd\": \"reset\"}"}' --once` starts a fresh 30-generation run.
+
+Then open the dashboard **with the port as a `?port=` query string** (the
+page reads it from the URL, it's not a hardcoded constant to edit anymore --
+`run_demo.sh` prints the exact URL to use). Either serve it:
+
+```bash
+cd src/guarded_eval/dashboard
+python3 -m http.server 8000
+# then open http://localhost:8000/dashboard.html?port=19091
+# (use whatever port run_demo.sh printed, or 9090 if you launched manually
+# with no port:= override)
+```
+
+or just open `dashboard.html?port=19091` directly as a `file://` URL in a
+browser. No query string at all falls back to rosbridge's own default,
+9090.
+
+## Poking it from the CLI
+
+Remember to `export ROS_DOMAIN_ID=<same number>` in this shell too if you set
+one for the launch (see above) -- otherwise these commands are on a
+different DDS domain and will see nothing.
+
+```bash
+ros2 topic list
+ros2 topic echo /metrics
+ros2 topic echo /robot_state
+ros2 topic pub /control std_msgs/String '{data: "{\"cmd\": \"pause\"}"}' --once
+ros2 topic pub /control std_msgs/String '{data: "{\"cmd\": \"run\"}"}' --once
+ros2 topic pub /control std_msgs/String '{data: "{\"cmd\": \"reset\"}"}' --once
+```
+
+## Seed notes (both real, neither cherry-picked to force a story)
+
+- **seed 9** (the launch default): naive's champion never discovers real
+  confirming behavior at all, held-out `truth` stays at ~0.000 the entire
+  30-generation run while its proxy score climbs substantially. Guarded's
+  gate starts starved (0 passers for several generations) but recovers,
+  eventually holding 6–11 of 24 candidates passing per generation, and its
+  held-out truth becomes consistently nonzero (roughly 0.03–0.11) from
+  around generation 16 on.
+- **Guarded is not free and it is not universal.** Across 30 seeds
+  (`experiments/sweep.py`), guarded's champion still ends with a real success
+  rate of exactly zero on 3 of them. The comparison that matters is against a
+  *compute-matched* naive baseline: guarding costs about 162 rollouts per
+  generation against naive's 96, so naive was re-run at double the population
+  (48 genomes, 192 rollouts per generation — more than guarded ever gets).
+  It still collapsed on 15 of 30 seeds, against guarded's 3. Every run,
+  including guarded's failures, is in `experiments/results.csv`.
+  Reproduce with `python experiments/sweep.py --seeds 30 --generations 30`.
+
+Don't expect every seed to show a clean "naive collapses, guarded holds"
+story: some do, some don't. The seeds where guarded fails are in
+`experiments/results.csv` alongside the ones where it wins, rather than
+tuned away.
+
+## Package layout
 
 ```
-guarded_eval/
-  guarded_eval/core.py       pure numpy: arm kinematics, policy, evaluators, both selection loops
-  guarded_eval/selection_node.py   runs naive + guarded selection, one generation per tick
-  guarded_eval/sim_node.py         steps both live arms, publishes joint states + robot state
-  launch/demo.launch.py      rosbridge + both nodes
-  dashboard/dashboard.html   self-contained live dashboard (roslib.js, canvas rendering)
-  run_demo.sh                port-safe launcher
-  demo.gif                   the clip above, generated straight from core.py's own rollout data
+guarded_eval_ws/src/guarded_eval/
+  package.xml, setup.py, setup.cfg, resource/guarded_eval   ROS 2 ament_python package files
+  guarded_eval/core.py            pure numpy: arm kinematics, policy family,
+                                   proxy_score/truth_score/cheap_gate,
+                                   evolve_naive/evolve_guarded. No ROS imports;
+                                   independently testable/importable.
+  guarded_eval/selection_node.py  runs both selection loops, one generation
+                                   per timer tick; publishes champions + metrics
+  guarded_eval/sim_node.py        steps both live arms in lock-step on a
+                                   shared target; publishes joint states +
+                                   robot_state for the dashboard to draw
+  launch/demo.launch.py           rosbridge + both nodes together
+  dashboard/dashboard.html        self-contained dark-themed browser dashboard
+                                   (roslib.js from CDN, everything else inline)
 ```
+
+## No-sudo ROS 2 via RoboStack
+
+If ROS 2 isn't installed and you can't (or don't want to) `sudo apt install`
+it system-wide, [RoboStack](https://robostack.github.io/) ships ROS 2 as
+ordinary conda-forge packages, entirely in user space:
+
+```bash
+conda create -n ros_env python=3.11 -y
+conda activate ros_env
+conda config --env --add channels robostack-jazzy
+conda config --env --add channels conda-forge
+conda config --env --remove channels defaults 2>/dev/null || true
+conda install ros-jazzy-ros-base ros-jazzy-rosbridge-suite colcon-common-extensions -y
+```
+
+then `colcon build`/`ros2 launch` exactly as above, from inside that conda
+environment. This is genuinely how this package's own build was verified on
+a machine with no system ROS 2 and no sudo access, not a hypothetical
+fallback.
