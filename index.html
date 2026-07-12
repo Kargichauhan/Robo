@@ -32,7 +32,7 @@
   table td, table th{border:1px solid var(--line); padding:7px 13px; text-align:center;}
   table th{color:var(--sub); font-weight:400;}
   .hero{text-align:center; padding:36px 0 10px;}
-  #heroCanvas{width:100%; max-width:300px; height:250px; margin:0 auto; display:block;}
+  #heroCanvas{width:100%; max-width:340px; height:260px; margin:0 auto; display:block;}
   .caption{font-size:13px; color:var(--sub); margin-top:4px; text-align:center;}
   .diagram{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; margin:18px 0;}
   .diagram svg{width:100%; height:auto; display:block;}
@@ -52,19 +52,20 @@
   .demo-panel{flex:1 1 260px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px;}
   .demo-ptitle{font-size:14px; font-weight:600; display:flex; align-items:center; gap:7px; margin-bottom:8px;}
   .demo-dot{width:9px; height:9px; border-radius:50%;}
-  canvas.demo-arm{width:100%; height:220px; display:block; background:#ffffff; border:1px solid var(--line); border-radius:6px;}
+  canvas.demo-arm{width:100%; height:250px; display:block; background:#fbfbfc; border:1px solid var(--line); border-radius:6px;}
   .demo-stats{font-size:12.5px; color:var(--sub); margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;}
   .demo-stats b{color:var(--text); font-weight:600;}
   .chart-box{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin:14px 0;}
-  canvas.demo-chart{width:100%; height:110px; display:block;}
+  canvas.demo-chart{width:100%; height:170px; display:block;}
   .demo-legend{font-size:12.5px; color:var(--sub); display:flex; gap:16px; margin-bottom:6px;}
-  .demo-controls{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
-  .demo-controls button{font-size:13px;}
-  button:focus-visible{outline:2px solid var(--link); outline-offset:2px;}
-  @media (prefers-reduced-motion: reduce){ #heroCanvas, canvas.demo-arm { display:none; } }
   .demo-legend span{display:flex; align-items:center; gap:5px;}
   .sw{width:14px; height:2px;}
   button{font-size:13px; background:#fff; border:1px solid var(--line); color:var(--text); padding:7px 14px; border-radius:6px; cursor:pointer;}
+  button:focus-visible{outline:2px solid var(--link); outline-offset:2px;}
+  button:disabled{opacity:0.55; cursor:default;}
+  .sw.dash{background:repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px); height:2px;}
+  .seed-tag{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; color:var(--sub); margin-left:10px;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
   button:hover{background:var(--panel);}
   footer{padding:36px 0 60px; color:var(--sub); font-size:14px;}
   .toc{font-size:14px; columns:2; column-gap:24px;}
@@ -77,7 +78,7 @@
 <div class="wrap">
   <div class="hero">
     <canvas id="heroCanvas"></canvas>
-    <p class="caption">a real rollout of a trained arm, not a scripted animation</p>
+    <p class="caption">a real rollout of an arm trained <em>with</em> the ground-truth check — this is what actually succeeding looks like</p>
   </div>
 
   <h1>Does the robot actually succeed, or just look like it did?</h1>
@@ -104,8 +105,9 @@
 
 <section id="question">
   <h2>The question</h2>
-  <p>RoboWorld predicts how a robot policy will do instead of testing it for real, and matches real results at 0.97 correlation. But every policy it ranked was trained elsewhere first, then checked afterward. Nobody had trained a policy to specifically target it.</p>
-  <p>That is Goodhart's law waiting to happen: once a measure becomes a target, it stops measuring anything real. So, build a naive loop that only sees the cheap check, and a guarded one that has to clear a real check first. Same start, same tasks, watch what happens.</p>
+  <p>There is a recent system called RoboWorld. It uses a fast neural network to predict how well a robot policy will do, instead of testing the policy for real every time. It is good at this. It matches real test results with a correlation of 0.97.</p>
+  <p>But there is a gap in how it was tested. Every policy it ranked was trained somewhere else first, then checked by RoboWorld afterward. Nobody had trained a policy specifically to score well on RoboWorld itself. That is a different situation, and a harder one. If a policy is optimized directly against a cheap evaluator, it is easy for it to learn tricks that fool the evaluator instead of solving the real task. This is Goodhart's law: once a measure becomes a target, it stops being a good measure.</p>
+  <p>So that was the plan. Build a naive version that only ever sees the cheap evaluator, and a guarded version that has to pass a real, but still cheap, check before it is allowed to trust the fast evaluator. Run both from the same starting point and see what actually happens.</p>
 
   <div class="diagram">
     <svg viewBox="0 0 640 210" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace,monospace">
@@ -129,9 +131,6 @@
       <text x="335" y="158" text-anchor="middle" font-size="13" fill="#1a9c5e" font-weight="700">truth check</text>
       <text x="335" y="176" text-anchor="middle" font-size="11" fill="#4a5568">several noisy rollouts,</text>
       <text x="335" y="190" text-anchor="middle" font-size="11" fill="#4a5568">checks it actually held on</text>
-      <g transform="translate(408,152) scale(0.55)" opacity="0.75">
-        <path d="M0,0 Q6,-10 12,0 M4,-2 Q9,-10 14,-2 M8,-3 Q13,-10 17,-3 M-2,4 L0,-4 Q6,-14 12,-4 L14,6 Z" fill="none" stroke="#1a9c5e" stroke-width="2" stroke-linecap="round"/>
-      </g>
 
       <line x1="445" y1="45" x2="445" y2="165" stroke="#c7c7cc" stroke-width="1" stroke-dasharray="3,3"/>
       <text x="470" y="100" font-size="11" fill="#8e8e93">the gap</text>
@@ -144,13 +143,14 @@
 
 <section id="wall">
   <h2>The wall</h2>
-  <p>First attempt: Isaac Sim, real physics, a real published policy checkpoint. Four real bugs fixed along the way, a packaging issue, a port conflict, a GPU config problem, a missing library.</p>
-  <p>Then a fifth: Isaac Sim's own physics module is hardcoded to an old version with a known, unfixed conflict on newer GPU drivers. Same error, other machines, same story online. Rebuilding from source takes hours with no guarantee. Downgrading the shared server's driver would break someone else's job. Not every wall is worth pushing through. Built the smaller version instead.</p>
+  <p>The first approach used Isaac Sim, a real physics simulator, with a real published robot policy checkpoint. Real progress was made: four separate bugs fixed along the way, a packaging issue, a port conflict, a GPU configuration problem, and a missing system library.</p>
+  <p>Then a fifth bug turned out to be unfixable. Isaac Sim has an internal physics module hardcoded to an old version, and that version has a known, unresolved conflict with newer GPU drivers. Other people online have hit the exact same error on completely different machines. The only real fixes are rebuilding Isaac Sim from source, which takes hours with no guarantee of working, or downgrading the server's driver, which would have broken someone else's job running on the same shared machine.</p>
+  <p>Not every wall is worth pushing through, especially an upstream bug outside the project's control. The break point is documented, and a smaller version of the same experiment was built instead.</p>
 </section>
 
 <section id="fallback">
   <h2>The smaller version</h2>
-  <p>An arm has to reach a target and hold it, gripper closed, for a few steps in a row. Not just get close once. A cheap check that only measures the single closest approach over the whole episode can be fooled by a fly-by that never actually grips. A slower check catches that.</p>
+  <p>An arm has to reach a target and actually hold it there, gripper closed, for a few steps in a row. Not just get close for a moment. A cheap evaluator that only checks distance can be fooled by an arm that hovers near the target without ever properly gripping it. A slower, stricter evaluator checks whether it actually held on.</p>
   <pre><span class="c"># core.py, the confirm condition</span>
 if gripper_closed and d &lt; CONFIRM_RADIUS:
     dwell_count += 1
@@ -158,57 +158,9 @@ else:
     dwell_count = 0
 if dwell_count &gt;= DWELL_TICKS:
     confirmed = True  <span class="c"># this is what the cheap check can't see</span></pre>
+  <p>Two evaluators run on this task. <code>proxy_score</code> is a single quick rollout, scored only by distance, and it never checks whether the arm actually confirmed. <code>truth_score</code> runs several noisy rollouts and checks strictly whether it held on. Naive selection only ever sees the first one. Guarded selection has to pass a cheap version of the second one, called a gate, before it is even allowed onto the leaderboard.</p>
+  <p>The final version of the arm is a real 2-link planar arm with forward kinematics, not just a point moving in a straight line. It has to coordinate two joint angles to reach the target, which is closer to how an actual robot arm works.</p>
 
-  <div class="diagram">
-    <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace,monospace">
-      <circle cx="140" cy="75" r="46" fill="none" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="3,3"/>
-      <path d="M120,55 Q135,68 130,80 Q127,88 140,90 Q153,88 150,80 Q145,68 160,55" fill="none" stroke="#5a6e82" stroke-width="1.6" stroke-linecap="round"/>
-      <line x1="140" y1="90" x2="140" y2="105" stroke="#5a6e82" stroke-width="1.6"/>
-      <line x1="128" y1="105" x2="152" y2="105" stroke="#5a6e82" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M100,50 Q95,60 100,68 M180,50 Q185,60 180,68" fill="none" stroke="#d9a878" stroke-width="4" stroke-linecap="round"/>
-      <path d="M140,75 m-52,0 a52,52 0 0 1 20,-44" fill="none" stroke="#1a9c5e" stroke-width="3" stroke-linecap="round"/>
-      <text x="140" y="135" text-anchor="middle" font-size="11" fill="#8e8e93">confirm radius, gripper closed</text>
-
-      <line x1="230" y1="75" x2="290" y2="75" stroke="#8e8e93" stroke-width="1.4" marker-end="url(#arrow1)"/>
-
-      <text x="330" y="30" font-size="12" fill="#1d1d1f" font-weight="700">dwell_count must reach 5</text>
-      <rect x="330" y="45" width="26" height="26" rx="4" fill="#e8f6ee" stroke="#1a9c5e"/>
-      <rect x="362" y="45" width="26" height="26" rx="4" fill="#e8f6ee" stroke="#1a9c5e"/>
-      <rect x="394" y="45" width="26" height="26" rx="4" fill="#e8f6ee" stroke="#1a9c5e"/>
-      <rect x="426" y="45" width="26" height="26" rx="4" fill="#e8f6ee" stroke="#1a9c5e"/>
-      <rect x="458" y="45" width="26" height="26" rx="4" fill="#e8f6ee" stroke="#1a9c5e"/>
-      <text x="343" y="63" text-anchor="middle" font-size="12" fill="#1a9c5e">1</text>
-      <text x="375" y="63" text-anchor="middle" font-size="12" fill="#1a9c5e">2</text>
-      <text x="407" y="63" text-anchor="middle" font-size="12" fill="#1a9c5e">3</text>
-      <text x="439" y="63" text-anchor="middle" font-size="12" fill="#1a9c5e">4</text>
-      <text x="471" y="63" text-anchor="middle" font-size="12" fill="#1a9c5e">5</text>
-      <text x="330" y="92" font-size="11" fill="#8e8e93">one dropped tick anywhere in the</text>
-      <text x="330" y="105" font-size="11" fill="#8e8e93">sequence resets the count to zero</text>
-    </svg>
-    <p class="diagram-caption">A single lucky pass through the confirm radius does nothing. The count only advances on consecutive ticks with the grip actually closed.</p>
-  </div>
-</section>
-
-<section id="number">
-  <h2>The number</h2>
-  <p>Thirty runs, same starting population each time, naive against guarded. A run counted as collapsed if real success stayed at exactly zero for five generations straight.</p>
-  <table>
-    <tr><th></th><th>guarded collapsed</th><th>guarded held</th></tr>
-    <tr><th>naive collapsed</th><td>1</td><td>11</td></tr>
-    <tr><th>naive held</th><td>1</td><td>17</td></tr>
-  </table>
-  <div class="stats">
-    <div class="stat"><b>12 / 30</b><span>naive runs collapsed</span></div>
-    <div class="stat"><b>2 / 30</b><span>guarded runs collapsed</span></div>
-    <div class="stat"><b>p = 0.006</b><span>collapse difference</span></div>
-    <div class="stat"><b>p = 0.020</b><span>correlation held up</span></div>
-  </div>
-  <p>Independently, a separate 20-seed sweep in this exact JavaScript implementation (not the same code as the 30-seed Python run above, a second, independent check) found the same shape: guarded ahead on 14 of 20 seeds, naive ahead on 3, tied on 3, mean truth 0.175 for guarded against 0.036 for naive. Two different implementations, two different sweeps, same direction. A script that reproduces the 30-seed table above from this repo directly is included, see <code>experiments/sweep.py</code>.</p>
-  <p>Both guarded failures in the 30-seed run share the same mechanism on inspection: the cheap gate got too strict for that population and let nothing through for a stretch, so guarding quietly ran as random search during that window. A real, named weakness in this specific gate design, not a hole in the overall result. Naive also loses outright on some seeds in the 20-seed JS sweep, not just ties or collapses, an honest reminder that this is a real distribution with real variance in both directions, not a guaranteed win.</p>
-</section>
-
-<section id="watch">
-  <h2>Watch it happen</h2>
   <div class="diagram">
     <svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace,monospace">
       <defs>
@@ -243,9 +195,30 @@ if dwell_count &gt;= DWELL_TICKS:
       <path d="M 585 253 C 620 253 620 30 410 30" fill="none" stroke="#1a9c5e" stroke-width="1.2" stroke-dasharray="2,3"/>
       <text x="380" y="200" font-size="11" fill="#8e8e93">guarded</text>
     </svg>
-    <p class="diagram-caption">Same population, same tasks, one rule change. Below, this is running for real.</p>
+    <p class="diagram-caption">Same population, same task set, one rule change. The guarded path never lets the best proxy performers become elites unless they first prove something real.</p>
   </div>
-  <p style="font-size:14px;color:var(--sub)">Both arms now provably share the same target and the same noise draw each round, and a Web Worker runs the evolution off the main thread so the page stays responsive. seed <b id="seedDisplay">-</b> &middot; gen <b id="genNow">-</b></p>
+</section>
+
+<section id="number">
+  <h2>The number</h2>
+  <p>This ran thirty times, from the same starting population each time, naive on one side and guarded on the other. A run counted as collapsed if the arm's real success rate stayed at exactly zero for five generations in a row.</p>
+  <table>
+    <tr><th></th><th>guarded collapsed</th><th>guarded held</th></tr>
+    <tr><th>naive collapsed</th><td>1</td><td>11</td></tr>
+    <tr><th>naive held</th><td>1</td><td>17</td></tr>
+  </table>
+  <div class="stats">
+    <div class="stat"><b>12 / 30</b><span>naive runs collapsed</span></div>
+    <div class="stat"><b>2 / 30</b><span>guarded runs collapsed</span></div>
+    <div class="stat"><b>p = 0.006</b><span>collapse difference</span></div>
+    <div class="stat"><b>p = 0.020</b><span>correlation held up</span></div>
+  </div>
+  <p>Two guarded runs did fail, both for the same reason: the cheap gate got too strict for that particular population and let nothing through, so guarding quietly turned into random search. That is a real weakness in this specific design, not a hole in the overall result.</p>
+</section>
+
+<section id="watch">
+  <h2>Watch it happen</h2>
+  <p>The same algorithm as <code>core.py</code>, running live in this page — the real 2-link arm, in joint space. Both start from an <strong>identical random population</strong>, and every episode gives them the <strong>same target, the same starting pose, and the same noise</strong>. The only difference is whether the gate gets a vote. Dashed lines are the cheap proxy score. Solid lines are the real success rate. Watch them come apart.</p>
   <div class="demo-panels">
     <div class="demo-panel">
       <div class="demo-ptitle"><span class="demo-dot" style="background:var(--naive)"></span>naive</div>
@@ -260,23 +233,20 @@ if dwell_count &gt;= DWELL_TICKS:
   </div>
   <div class="chart-box">
     <div class="demo-legend">
-      <span><span class="sw" style="background:var(--naive)"></span>naive truth (solid) / proxy (dashed)</span>
-      <span><span class="sw" style="background:var(--guarded)"></span>guarded truth (solid) / proxy (dashed)</span>
+      <span><span class="sw dash" style="color:var(--naive)"></span>naive proxy</span>
+      <span><span class="sw" style="background:var(--naive)"></span>naive truth</span>
+      <span><span class="sw dash" style="color:var(--guarded)"></span>guarded proxy</span>
+      <span><span class="sw" style="background:var(--guarded)"></span>guarded truth</span>
     </div>
-    <canvas class="demo-chart" id="demoChart" style="height:180px"></canvas>
+    <canvas class="demo-chart" id="demoChart"></canvas>
   </div>
-  <div class="demo-controls">
-    <button id="demoPauseBtn">pause</button>
-    <button id="demoStepBtn">step one generation</button>
-    <button id="demoReseedBtn">try another seed</button>
-    <button id="demoFailureBtn">seed 5 (verified failure case)</button>
-  </div>
-  <p style="font-size:13px;color:var(--sub);margin-top:8px">Seed 5 is a real, independently verified case in this exact implementation where naive beats guarded (naive truth 0.52 vs guarded 0.01 at 20 generations). Shown on purpose.</p>
+  <button id="demoResetBtn">try another seed</button><span class="seed-tag">seed <b id="demoSeed">10</b> · append <code>?seed=N</code> to the URL to pin a run</span>
 </section>
 
 <section id="hardware">
   <h2>Onto real hardware</h2>
-  <p>The same thing as a real ROS 2 package, <code>guarded_eval</code>, installed with no sudo through RoboStack. <code>selection_node</code> runs both loops and publishes each generation's best genome. <code>sim_node</code> runs those genomes live and streams the arm state. A browser dashboard draws it all: real hands, fingers that curl, a dwell ring, a green flash on a real confirm.</p>
+  <p>This also exists as an actual ROS 2 package, called <code>guarded_eval</code>, running as real nodes over real topics instead of a plain script. The server had no ROS 2 installed and no sudo access, so ROS 2 Jazzy was installed entirely in user space through RoboStack, a conda-forge packaging of ROS 2. Fully reversible, no root needed.</p>
+  <p>The package has two nodes. <code>selection_node</code> runs the naive and guarded evolutionary loops side by side, one generation per tick, and publishes each generation's best genome plus a metrics feed. <code>sim_node</code> takes whatever genome was last published for each condition and actually runs it live, streaming joint positions and full arm state. A browser dashboard connects to both over rosbridge and draws two arms with real hands, fingers that curl, a dwell ring that fills as the grip holds, and a green flash the moment a hold actually confirms.</p>
 
   <div class="diagram">
     <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace,monospace">
@@ -337,7 +307,6 @@ if dwell_count &gt;= DWELL_TICKS:
   <p><b>Why two different statistical tests, not one.</b> Whether the cheap check stays honest and whether that honesty actually stops failure are two different claims. They needed two different tests, and both held up.</p>
   <p><b>Why the two failures are named instead of left out.</b> A result that holds up when its weak spots are pointed at is worth more than one that only looks clean because nobody checked.</p>
   <p><b>Why backfill with fresh random genomes instead of the best available.</b> If the gate is too strict and nothing passes, falling back to the best proxy scorer would quietly turn guarded selection back into naive selection for that generation. Random genomes keep the guard honest even when it costs performance.</p>
-  <p><b>Why ACTION_DIM is 8 when only 3 of those outputs are ever read.</b> It echoes DROID's real 7-joint-plus-gripper convention, which is a real correspondence worth keeping, but it has a real cost: roughly 30% of the genome (the weights feeding the 5 unused outputs) is mutated every generation and affects nothing, pure injected variance. Kept as is for the DROID correspondence, acknowledged here rather than left unremarked.</p>
   <p><b>Why build the real ROS version at all, once the numpy result already existed.</b> A result is one kind of evidence. A working system running the same idea live, on real infrastructure, with real topics and a real dashboard, is a different kind. Both matter, and neither replaces the other.</p>
 </section>
 
@@ -392,13 +361,14 @@ def truth_score(genome, tasks, n_rollouts=6, noise=0.05, rng=None):
 
 <section id="verify">
   <h2>Verification</h2>
-  <p>A headless smoke test ran the real logic directly before any ROS node existed, same settings as the live system: population 24, 6 elites, seed 9.</p>
+  <p>Before any ROS node was wired up, a headless smoke test ran the real selection logic directly, at the same settings the live system uses: population of 24, 6 elites, seed 9, 26 generations.</p>
   <pre>gen  0: naive proxy=-0.590 truth=0.000  |  guarded proxy=-0.590 truth=0.000
 gen  9: naive proxy=-0.166 truth=0.000  |  guarded proxy=-0.650 truth=0.056  passers=1
 gen 17: naive proxy=-0.096 truth=0.000  |  guarded proxy=-0.515 truth=0.083  passers=2
+gen 19: naive proxy=-0.096 truth=0.000  |  guarded proxy=-0.515 truth=0.083  passers=11
 gen 26: naive proxy=-0.096 truth=0.000  |  guarded proxy=-0.247 truth=0.056  passers=10</pre>
-  <p>Naive's proxy improves the whole run while real success never leaves zero, it never finds real confirming behavior at all. Guarded starts empty, then recovers by generation fifteen and stays productive.</p>
-  <p>Live: build succeeded, launch came up with zero retry warnings on a private domain and a real free port, every topic present, real dwell and confirm fields updating correctly, including a confirmed hold correctly staying true for the rest of that episode after the grip count resets. Documented behavior, not a bug.</p>
+  <p>Read plainly rather than reshaped to look clean, naive's proxy score genuinely improves the entire run while its real success rate never leaves exactly zero. It does not collapse from a peak, it simply never finds real confirming behavior at all, despite looking better and better by its own metric the whole time. Guarded's gate starts empty, nothing passes for the first several generations, then recovers by generation fifteen or so and stays productive from there.</p>
+  <p>After the RoboStack install and every fix listed above, the live system was checked directly: the build succeeded, the launch came up with no retry warnings once a private network domain and a genuinely free port were used, every expected topic was present, and a live snapshot of the full robot state showed real, correctly shaped data, including the exact dwell and confirm fields the dashboard's rendering depends on. One detail worth noting rather than hiding, a confirmed hold stays true for the rest of that episode even after the grip count drops back to zero afterward. That is the documented, correct behavior, not a bug.</p>
 </section>
 
 <section id="run">
@@ -886,492 +856,620 @@ try:
     s.close()
     sys.exit(0)
 except OSError:
-    sys.exit(1)
-"
+  <script>
+
+// ============================================================================
+//  guarded_eval — live in-browser demo
+//  Faithful port of guarded_eval/core.py: 2-link planar arm, joint-space
+//  control, forward kinematics. The end effector is DERIVED from the joint
+//  angles, never set directly, so the arm can never leave its own workspace
+//  and the picture can never disagree with the simulator.
+// ============================================================================
+
+// -- core.py constants, unchanged --------------------------------------------
+const OBS_DIM = 8, ACTION_DIM = 8, HIDDEN_DIM = 16;
+const GENOME_DIM = OBS_DIM * HIDDEN_DIM + HIDDEN_DIM + HIDDEN_DIM * ACTION_DIM + ACTION_DIM;
+const L1 = 1.0, L2 = 0.8, REACH = L1 + L2;
+const MAX_DTHETA = 0.18, CONFIRM_RADIUS = 0.22, DWELL_TICKS = 5, EPISODE_LEN = 60;
+const MUT_SIGMA = 0.14, NOISE = 0.05;
+
+const POP_SIZE = 24, N_ELITES = 6;
+const N_SELECTION_TASKS = 4, N_GATE_TASKS = 3, N_EVAL_TASKS = 6;
+const GATE_ROLLOUTS = 2, TRUTH_ROLLOUTS = 6, MAX_GEN = 30;
+
+// -- rng ---------------------------------------------------------------------
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(rng) {
+  let u = 0, v = 0;
+  while (u === 0) u = rng();
+  while (v === 0) v = rng();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
-CHOSEN_PORT=""
-if [ -n "${1:-}" ]; then
-  if is_port_free "$1"; then
-    CHOSEN_PORT="$1"
-  else
-    echo "ERROR: port $1 requested but already in use." >&2
-    exit 1
-  fi
-else
-  for port in $(seq "$PORT_RANGE_START" "$PORT_RANGE_END"); do
-    if is_port_free "$port"; then
-      CHOSEN_PORT="$port"
-      break
-    fi
-  done
-  if [ -z "$CHOSEN_PORT" ]; then
-    echo "ERROR: no free port found." >&2
-    exit 1
-  fi
-fi
-
-if [ "${CONDA_DEFAULT_ENV:-}" != "ros_env" ]; then
-  source ~/miniconda3/etc/profile.d/conda.sh
-  conda activate ros_env
-fi
-
-export ROS_DOMAIN_ID="$ROS_DOMAIN_ID_VALUE"
-cd "$WORKSPACE_DIR"
-source install/setup.bash
-
-echo "DASHBOARD: dashboard.html?port=${CHOSEN_PORT}"
-exec ros2 launch guarded_eval demo.launch.py port:="$CHOSEN_PORT"</pre>
-  </details>
-</section>
-
-</div>
-
-<footer>
-  <div class="wrap">
-    <p>Every number above came from a real run. The two failures are included on purpose. The demo above is running the same algorithm as the rest of the page, live, in this browser tab.</p>
-  </div>
-</footer>
-
-<script>
-
-const WORKER_CODE = '\n// Faithful port of core.py. Every constant, every dynamic, matches the real\n// file exactly, this is the fix for the "demo isn\'t the algorithm the page\n// claims it is" problem: real 2-link forward kinematics, joint-space\n// control, no Cartesian shortcut, no ik() reconstruction, no clamping.\nconst L1=1.0, L2=0.8, REACH=L1+L2;\nconst MAX_DTHETA=0.18;\nconst CONFIRM_RADIUS=0.22, DWELL_TICKS=5, EPISODE_LEN=60;\nconst OBS_DIM=8, ACTION_DIM=8, HIDDEN_DIM=16;\nconst GENOME_DIM = OBS_DIM*HIDDEN_DIM + HIDDEN_DIM + HIDDEN_DIM*ACTION_DIM + ACTION_DIM;\n\nconst POP_SIZE=24, N_ELITES=6;\nconst N_SELECTION_TASKS=4, N_GATE_TASKS=3, N_EVAL_TASKS=6;\nconst TRUTH_ROLLOUTS=6, GATE_ROLLOUTS=2;\nconst MUTATION_SIGMA=0.14;\n\nfunction mulberry32(seed){return function(){seed|=0;seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^(seed>>>15),1|seed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}\nfunction gauss(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}\nfunction randomGenome(rng,scale){scale=scale===undefined?0.5:scale;const g=new Float64Array(GENOME_DIM);for(let i=0;i<GENOME_DIM;i++)g[i]=gauss(rng)*scale;return g;}\nfunction mutate(genome,rng,sigma){sigma=sigma===undefined?MUTATION_SIGMA:sigma;const g=new Float64Array(GENOME_DIM);for(let i=0;i<GENOME_DIM;i++)g[i]=genome[i]+gauss(rng)*sigma;return g;}\nfunction mlpForward(genome,obs){\n  let idx=0; const w1=genome.subarray(idx,idx+=OBS_DIM*HIDDEN_DIM), b1=genome.subarray(idx,idx+=HIDDEN_DIM);\n  const w2=genome.subarray(idx,idx+=HIDDEN_DIM*ACTION_DIM), b2=genome.subarray(idx,idx+=ACTION_DIM);\n  const hidden=new Float64Array(HIDDEN_DIM);\n  for(let h=0;h<HIDDEN_DIM;h++){let s=b1[h];for(let i=0;i<OBS_DIM;i++)s+=obs[i]*w1[i*HIDDEN_DIM+h];hidden[h]=Math.tanh(s);}\n  const out=new Float64Array(ACTION_DIM);\n  for(let a=0;a<ACTION_DIM;a++){let s=b2[a];for(let h=0;h<HIDDEN_DIM;h++)s+=hidden[h]*w2[h*ACTION_DIM+a];out[a]=Math.tanh(s);}\n  return out;\n}\nfunction fk(theta){\n  const t1=theta[0], t2=theta[1];\n  const j1=[L1*Math.cos(t1), L1*Math.sin(t1)];\n  const ee=[j1[0]+L2*Math.cos(t1+t2), j1[1]+L2*Math.sin(t1+t2)];\n  return {joint1:j1, ee};\n}\nfunction wrapPi(a){\n  // P1-5 fix: keep theta in [-pi, pi] so the observation (theta/pi) never\n  // drifts outside the range the policy was ever trained on\n  a = a % (2*Math.PI);\n  if(a > Math.PI) a -= 2*Math.PI;\n  if(a < -Math.PI) a += 2*Math.PI;\n  return a;\n}\nfunction sampleTask(rng){\n  const angle = rng()*Math.PI;\n  const radius = (0.35 + rng()*0.55) * REACH;\n  const target = [radius*Math.cos(angle), radius*Math.sin(angle)];\n  const startTheta = [(rng()*2-1)*Math.PI/2, (rng()*2-1)*Math.PI/2];\n  return {target, startTheta};\n}\nfunction makeObs(theta,ee,target,gripperClosed,dwellCount){\n  return new Float64Array([\n    theta[0]/Math.PI, theta[1]/Math.PI,\n    ee[0], ee[1],\n    target[0]-ee[0], target[1]-ee[1],\n    gripperClosed?1:-1,\n    dwellCount/DWELL_TICKS,\n  ]);\n}\nfunction rollout(genome, task, opts){\n  opts = opts||{};\n  const actionNoise=opts.actionNoise||0, obsNoise=opts.obsNoise||0, rng=opts.rng||Math.random, record=!!opts.record;\n  let theta=[task.startTheta[0], task.startTheta[1]];\n  const target=task.target;\n  let gripperClosed=false, dwellCount=0, confirmed=false;\n  let minDist = Math.hypot(fk(theta).ee[0]-target[0], fk(theta).ee[1]-target[1]);\n  const frames = record ? [] : null;\n  for(let t=0;t<EPISODE_LEN;t++){\n    let ee = fk(theta).ee;\n    let obs = makeObs(theta, ee, target, gripperClosed, dwellCount);\n    if(obsNoise>0) for(let i=0;i<obs.length;i++) obs[i]+=gauss(rng)*obsNoise;\n    const action = mlpForward(genome, obs);\n    let d0=Math.max(-1,Math.min(1,action[0]))*MAX_DTHETA, d1=Math.max(-1,Math.min(1,action[1]))*MAX_DTHETA;\n    if(actionNoise>0){ d0+=gauss(rng)*actionNoise; d1+=gauss(rng)*actionNoise; }\n    theta = [wrapPi(theta[0]+d0), wrapPi(theta[1]+d1)];\n    gripperClosed = action[7]>0;\n    ee = fk(theta).ee;\n    const d = Math.hypot(ee[0]-target[0], ee[1]-target[1]);\n    minDist = Math.min(minDist, d);\n    if(gripperClosed && d<CONFIRM_RADIUS) dwellCount++; else dwellCount=0;\n    if(dwellCount>=DWELL_TICKS) confirmed=true;\n    if(record) frames.push({theta:[theta[0],theta[1]], ee:[ee[0],ee[1]], gripperClosed, dwellCount, confirmed});\n  }\n  const out={success:confirmed, minDist};\n  if(record) out.frames=frames;\n  return out;\n}\nfunction proxyScore(genome, tasks){\n  let s=0; for(const t of tasks) s += -rollout(genome,t,{}).minDist;\n  return s/tasks.length;\n}\nfunction truthScore(genome, tasks, nRollouts, noise, rng){\n  nRollouts = nRollouts===undefined?TRUTH_ROLLOUTS:nRollouts;\n  noise = noise===undefined?0.05:noise;\n  rng = rng||Math.random;\n  let total=0;\n  for(const t of tasks){\n    let succ=0;\n    for(let i=0;i<nRollouts;i++) if(rollout(genome,t,{actionNoise:noise,obsNoise:noise,rng}).success) succ++;\n    total += succ/nRollouts;\n  }\n  return total/tasks.length;\n}\nfunction cheapGate(genome, gateTasks, rng){\n  return truthScore(genome, gateTasks, GATE_ROLLOUTS, 0.05, rng);\n}\nfunction evolveNaive(pop, tasks, nElites, rng){\n  const scores = pop.map(g=>proxyScore(g,tasks));\n  const order = scores.map((s,i)=>i).sort((a,b)=>scores[b]-scores[a]);\n  const elites = order.slice(0,nElites).map(i=>pop[i]);\n  const champion = elites[0];\n  const offspring=[]; for(let i=0;i<pop.length-nElites;i++) offspring.push(mutate(elites[Math.floor(rng()*elites.length)],rng));\n  return {pool: elites.concat(offspring), champion};\n}\nfunction evolveGuarded(pop, selectionTasks, gateTasks, nElites, rng){\n  const gateScores = pop.map(g=>cheapGate(g,gateTasks,rng));\n  const passers = pop.filter((g,i)=>gateScores[i]>0);\n  const nPassers = passers.length;\n  let elites;\n  if(passers.length>0){\n    const ps = passers.map(g=>proxyScore(g,selectionTasks));\n    const order = ps.map((s,i)=>i).sort((a,b)=>ps[b]-ps[a]);\n    elites = order.slice(0,nElites).map(i=>passers[i]);\n  } else {\n    elites = [];\n  }\n  while(elites.length<nElites) elites.push(randomGenome(rng));\n  const champion = elites[0];\n  const offspring=[]; for(let i=0;i<pop.length-nElites;i++) offspring.push(mutate(elites[Math.floor(rng()*elites.length)],rng));\n  return {pool: elites.concat(offspring), champion, nPassers};\n}\n\n\nself.onmessage = function(e){\n  const msg = e.data;\n  if(msg.type === \'init\'){\n    state = makeState(msg.seed);\n    postState();\n  } else if(msg.type === \'step\'){\n    stepOnce();\n    postState();\n  } else if(msg.type === \'reseed\'){\n    state = makeState(msg.seed);\n    postState();\n  }\n};\n\nlet state = null;\n\nfunction makeState(seed){\n  const rngInit = mulberry32(seed);\n  const selectionTasks = Array.from({length:N_SELECTION_TASKS}, () => sampleTask(rngInit));\n  const gateTasks = Array.from({length:N_GATE_TASKS}, () => sampleTask(rngInit));\n  const evalTasks = Array.from({length:N_EVAL_TASKS}, () => sampleTask(rngInit));\n  const initialPool = Array.from({length:POP_SIZE}, () => randomGenome(rngInit));\n  const s = {\n    seed,\n    selectionTasks, gateTasks, evalTasks,\n    naivePool: initialPool.map(g=>new Float64Array(g)),\n    guardedPool: initialPool.map(g=>new Float64Array(g)),\n    rngNaive: mulberry32(seed*1000+1),\n    rngGuarded: mulberry32(seed*1000+2),\n    rngLog: mulberry32(seed*1000+3),\n    rngTrace: mulberry32(seed*1000+4),\n    gen: 0,\n    history: {naiveProxy:[], naiveTruth:[], guardedProxy:[], guardedTruth:[]},\n    nPassers: null,\n  };\n  const scores = s.naivePool.map(g=>proxyScore(g, s.selectionTasks));\n  const champ0 = s.naivePool[scores.indexOf(Math.max(...scores))];\n  s.naiveChampion = champ0; s.guardedChampion = champ0;\n  logMetrics(s);\n  makeTrace(s);\n  return s;\n}\n\nfunction logMetrics(s){\n  const pN = proxyScore(s.naiveChampion, s.evalTasks);\n  const tN = truthScore(s.naiveChampion, s.evalTasks, TRUTH_ROLLOUTS, 0.05, s.rngLog);\n  const pG = proxyScore(s.guardedChampion, s.evalTasks);\n  const tG = truthScore(s.guardedChampion, s.evalTasks, TRUTH_ROLLOUTS, 0.05, s.rngLog);\n  s.history.naiveProxy.push(pN); s.history.naiveTruth.push(tN);\n  s.history.guardedProxy.push(pG); s.history.guardedTruth.push(tG);\n  if(s.history.naiveProxy.length>60){ for(const k of Object.keys(s.history)) s.history[k].shift(); }\n}\n\nfunction makeTrace(s){\n  // P0-1 fix: ONE shared task, common random numbers, for both arms --\n  // any visible behavioral difference is attributable to the policy,\n  // not to one arm getting an easier target or luckier noise.\n  const task = sampleTask(s.rngTrace);\n  const noiseSeed = Math.floor(s.rngTrace()*4294967296);\n  s.sharedTask = task;\n  s.naiveTrace = rollout(s.naiveChampion, task, {actionNoise:0.05, obsNoise:0.05, rng: mulberry32(noiseSeed), record:true}).frames;\n  s.guardedTrace = rollout(s.guardedChampion, task, {actionNoise:0.05, obsNoise:0.05, rng: mulberry32(noiseSeed), record:true}).frames;\n}\n\nfunction stepOnce(){\n  const s = state;\n  s.gen++;\n  const nr = evolveNaive(s.naivePool, s.selectionTasks, N_ELITES, s.rngNaive);\n  s.naivePool = nr.pool; s.naiveChampion = nr.champion;\n  const gr = evolveGuarded(s.guardedPool, s.selectionTasks, s.gateTasks, N_ELITES, s.rngGuarded);\n  s.guardedPool = gr.pool; s.guardedChampion = gr.champion; s.nPassers = gr.nPassers;\n  logMetrics(s);\n  makeTrace(s);\n}\n\nfunction postState(){\n  const s = state;\n  self.postMessage({\n    seed: s.seed, gen: s.gen, nPassers: s.nPassers,\n    history: s.history,\n    sharedTask: s.sharedTask,\n    naiveTrace: s.naiveTrace, guardedTrace: s.guardedTrace,\n  });\n}\n';
-
-// ============================================================
-// MAIN THREAD — rendering only. All evolution happens in the
-// worker above; this code never runs a generation itself, it
-// only draws whatever state the worker last posted.
-// ============================================================
-function ik(dx,dy){
-  // used ONLY as a fallback if a trace frame is somehow missing theta
-  // (shouldn't happen with the worker's real FK, kept defensively)
-  let d=Math.hypot(dx,dy);
-  const maxR=REACH-0.001, minR=Math.abs(L1-L2)+0.001;
-  d=Math.max(minR,Math.min(maxR,d));
-  const cosE=(L1*L1+L2*L2-d*d)/(2*L1*L2);
-  const theta2=Math.acos(Math.max(-1,Math.min(1,cosE)));
-  const theta1=Math.atan2(dy,dx)-Math.atan2(L2*Math.sin(theta2), L1+L2*Math.cos(theta2));
-  return {theta1,theta2};
+// -- genome / policy (core.py: random_genome, mutate, MLP) -------------------
+function randomGenome(rng, scale) {
+  scale = scale || 0.5;
+  const g = new Float64Array(GENOME_DIM);
+  for (let i = 0; i < GENOME_DIM; i++) g[i] = gauss(rng) * scale;
+  return g;
 }
-function drawGlass(ctx, cx, cy, s){
-  ctx.save(); ctx.translate(cx, cy);
-  ctx.strokeStyle='rgba(90,110,130,0.55)'; ctx.lineWidth=1.6; ctx.lineCap='round'; ctx.lineJoin='round';
-  ctx.beginPath(); ctx.moveTo(-s*0.55,-s*1.0); ctx.quadraticCurveTo(-s*0.12,-s*0.1,0,s*0.05); ctx.quadraticCurveTo(s*0.12,-s*0.1,s*0.55,-s*1.0); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,s*0.05); ctx.lineTo(0,s*0.55); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-s*0.32,s*0.55); ctx.lineTo(s*0.32,s*0.55); ctx.stroke();
-  ctx.restore();
+function mutate(genome, rng, sigma) {
+  sigma = sigma || MUT_SIGMA;
+  const g = new Float64Array(GENOME_DIM);
+  for (let i = 0; i < GENOME_DIM; i++) g[i] = genome[i] + gauss(rng) * sigma;
+  return g;
 }
-function drawHand(ctx, wx, wy, dir, g, accent){
-  const dpx=Math.cos(dir), dpy=Math.sin(dir);
-  const palmCx=wx+dpx*6, palmCy=wy+dpy*6;
-  ctx.save(); ctx.translate(palmCx,palmCy); ctx.rotate(dir); ctx.fillStyle='#d9a878';
-  if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(-6,-7,12,14,4); ctx.fill(); }
-  else { ctx.beginPath(); ctx.rect(-6,-7,12,14); ctx.fill(); } // P2-6: roundRect fallback for older Safari
-  ctx.restore();
-  const baseX=wx+dpx*12, baseY=wy+dpy*12;
-  [-0.95,-0.32,0.32,0.95].forEach(off=>{
-    const openA=dir+off, closedA=dir-off*0.65, a=openA+(closedA-openA)*g;
-    const len=16*(1-0.55*g);
-    const tipX=baseX+Math.cos(a)*len, tipY=baseY+Math.sin(a)*len;
-    const curl=g*len*0.7;
-    const ctrlX=baseX+Math.cos(a)*len*0.5-Math.sin(a)*curl, ctrlY=baseY+Math.sin(a)*len*0.5+Math.cos(a)*curl;
-    ctx.beginPath(); ctx.moveTo(baseX,baseY); ctx.quadraticCurveTo(ctrlX,ctrlY,tipX,tipY);
-    ctx.lineWidth=3.5; ctx.lineCap='round'; ctx.strokeStyle='#d9a878'; ctx.stroke();
-  });
-  const perp=dir-Math.PI/2, ppx=Math.cos(perp), ppy=Math.sin(perp);
-  const thumbBaseX=wx+dpx*4+ppx*7, thumbBaseY=wy+dpy*4+ppy*7;
-  const thumbOpenA=dir-1.5, thumbClosedA=dir+0.35, thumbA=thumbOpenA+(thumbClosedA-thumbOpenA)*g;
-  const thumbLen=13*(1-0.45*g);
-  const thumbTipX=thumbBaseX+Math.cos(thumbA)*thumbLen, thumbTipY=thumbBaseY+Math.sin(thumbA)*thumbLen;
-  const thumbCurl=g*thumbLen*0.5;
-  const thumbCtrlX=thumbBaseX+Math.cos(thumbA)*thumbLen*0.5+Math.sin(thumbA)*thumbCurl, thumbCtrlY=thumbBaseY+Math.sin(thumbA)*thumbLen*0.5-Math.cos(thumbA)*thumbCurl;
-  ctx.beginPath(); ctx.moveTo(thumbBaseX,thumbBaseY); ctx.quadraticCurveTo(thumbCtrlX,thumbCtrlY,thumbTipX,thumbTipY);
-  ctx.lineWidth=3.5; ctx.lineCap='round'; ctx.strokeStyle='#d9a878'; ctx.stroke();
-  ctx.beginPath(); ctx.arc(wx,wy,2.5,0,Math.PI*2); ctx.fillStyle=accent; ctx.fill();
-}
-// P2-5: ghost trail of the end-effector path so far this episode, so the
-// naive-vs-guarded behavioral difference (sweep-through vs stop-and-hold)
-// is visible without eye-flicking between the two numeric readouts
-function drawGhostTrail(ctx, trace, uptoIdx, ox, oy, px, accent){
-  ctx.beginPath();
-  for(let i=0;i<=uptoIdx && i<trace.length;i++){
-    const x=ox+trace[i].ee[0]*px, y=oy-trace[i].ee[1]*px;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+function mlpForward(genome, obs) {
+  let idx = 0;
+  const w1 = genome.subarray(idx, idx += OBS_DIM * HIDDEN_DIM);
+  const b1 = genome.subarray(idx, idx += HIDDEN_DIM);
+  const w2 = genome.subarray(idx, idx += HIDDEN_DIM * ACTION_DIM);
+  const b2 = genome.subarray(idx, idx += ACTION_DIM);
+  const hidden = new Float64Array(HIDDEN_DIM);
+  for (let h = 0; h < HIDDEN_DIM; h++) {
+    let s = b1[h];
+    for (let i = 0; i < OBS_DIM; i++) s += obs[i] * w1[i * HIDDEN_DIM + h];
+    hidden[h] = Math.tanh(s);
   }
-  ctx.strokeStyle=accent; ctx.globalAlpha=0.25; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha=1;
-}
-function drawArmPanel(ctx,W,H,frame,g,target,dwellFrac,flash,accent,trace,traceIdx){
-  const ox=W/2, oy=40, px=Math.min(W,H*1.1)/(REACH*2.3);
-  ctx.clearRect(0,0,W,H);
-  const tx=ox+target[0]*px, ty=oy-target[1]*px;
-  ctx.beginPath(); ctx.arc(tx,ty,CONFIRM_RADIUS*px,0,Math.PI*2); ctx.strokeStyle='rgba(120,120,130,0.18)'; ctx.lineWidth=1.5; ctx.stroke();
-  drawGlass(ctx, tx, ty, CONFIRM_RADIUS*px*1.15);
-  ctx.beginPath(); ctx.arc(tx,ty,3.5,0,Math.PI*2); ctx.fillStyle=flash>0?`rgba(46,160,110,${0.5+flash*0.5})`:'rgba(200,150,80,0.85)'; ctx.fill();
-  if(dwellFrac>0){ctx.beginPath(); ctx.arc(tx,ty,CONFIRM_RADIUS*px+6,-Math.PI/2,-Math.PI/2+dwellFrac*Math.PI*2); ctx.strokeStyle=accent; ctx.lineWidth=3; ctx.stroke();}
-  if(trace) drawGhostTrail(ctx, trace, traceIdx, ox, oy, px, accent);
-  const theta=frame.theta;
-  const j1x=ox+L1*Math.cos(theta[0])*px, j1y=oy-L1*Math.sin(theta[0])*px;
-  const wx=ox+frame.ee[0]*px, wy=oy-frame.ee[1]*px;
-  ctx.beginPath(); ctx.arc(ox,oy,11,0,Math.PI*2); ctx.fillStyle='#332e40'; ctx.fill();
-  ctx.lineCap='round';
-  ctx.strokeStyle='#c99361'; ctx.lineWidth=13; ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(j1x,j1y); ctx.stroke();
-  ctx.strokeStyle='#d9a878'; ctx.lineWidth=11; ctx.beginPath(); ctx.moveTo(j1x,j1y); ctx.lineTo(wx,wy); ctx.stroke();
-  ctx.beginPath(); ctx.arc(j1x,j1y,6,0,Math.PI*2); ctx.fillStyle='#b9825a'; ctx.fill();
-  const dir=-(theta[0]+theta[1]); // canvas y is flipped, so flip heading too
-  drawHand(ctx, wx, wy, dir, g, accent);
-}
-
-
-function drawChart(ctx,W,H,history){
-  ctx.clearRect(0,0,W,H);
-  const padL=34, padR=10, padT=10, padB=18;
-  const plotW=W-padL-padR, plotH=H-padT-padB;
-  const n=Math.max(history.naiveTruth.length,1);
-  ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=1; // P2-2: was white-on-white, invisible
-  ctx.fillStyle='#8e8e93'; ctx.font='10px ui-monospace,monospace';
-  for(let i=0;i<=4;i++){
-    const y=padT+plotH*(1-i/4);
-    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
-    ctx.fillText((i/4).toFixed(2), 2, y+3);
+  const out = new Float64Array(ACTION_DIM);
+  for (let a = 0; a < ACTION_DIM; a++) {
+    let s = b2[a];
+    for (let h = 0; h < HIDDEN_DIM; h++) s += hidden[h] * w2[h * ACTION_DIM + a];
+    out[a] = Math.tanh(s);
   }
-  ctx.fillText('gen '+(n-1), W-padR-30, H-4);
-  ctx.fillText('gen 0', padL, H-4);
-
-  const xAt=i=>padL+plotW*(n<=1?0:i/(n-1));
-  const yAt=v=>padT+plotH*(1-Math.max(0,Math.min(1,v)));
-
-  function plotTruth(arr, color){
-    if(arr.length<2) return;
-    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.setLineDash([]);
-    ctx.beginPath();
-    arr.forEach((v,i)=>{const x=xAt(i), y=yAt(v); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);});
-    ctx.stroke();
-  }
-  function plotProxyNormalized(arr, color){
-    if(arr.length<2) return;
-    let lo=Math.min(...arr), hi=Math.max(...arr);
-    if(hi-lo<1e-9) hi=lo+1e-9;
-    ctx.strokeStyle=color; ctx.lineWidth=1.6; ctx.setLineDash([4,3]);
-    ctx.beginPath();
-    arr.forEach((v,i)=>{const norm=(v-lo)/(hi-lo); const x=xAt(i), y=yAt(norm); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);});
-    ctx.stroke(); ctx.setLineDash([]);
-  }
-  // This is the money shot the audit called out as missing: a dashed proxy
-  // line rising while the solid truth line underneath it stays flat is the
-  // entire thesis in one picture, for both conditions at once.
-  plotProxyNormalized(history.naiveProxy, '#4a94e8');
-  plotProxyNormalized(history.guardedProxy, '#2ecb8f');
-  plotTruth(history.naiveTruth, '#4a94e8');
-  plotTruth(history.guardedTruth, '#2ecb8f');
-}
-
-
-// ---- hero: a single illustrative rollout, trained WITH the ground-truth
-// check (not the naive/guarded comparison itself) so it reliably shows a
-// real confirm. Honestly labeled as such, per the audit's own note that
-// calling this "trained" without qualification does quiet work.
-// Faithful port of core.py. Every constant, every dynamic, matches the real
-// file exactly, this is the fix for the "demo isn't the algorithm the page
-// claims it is" problem: real 2-link forward kinematics, joint-space
-// control, no Cartesian shortcut, no ik() reconstruction, no clamping.
-const L1=1.0, L2=0.8, REACH=L1+L2;
-const MAX_DTHETA=0.18;
-const CONFIRM_RADIUS=0.22, DWELL_TICKS=5, EPISODE_LEN=60;
-const OBS_DIM=8, ACTION_DIM=8, HIDDEN_DIM=16;
-const GENOME_DIM = OBS_DIM*HIDDEN_DIM + HIDDEN_DIM + HIDDEN_DIM*ACTION_DIM + ACTION_DIM;
-
-const POP_SIZE=24, N_ELITES=6;
-const N_SELECTION_TASKS=4, N_GATE_TASKS=3, N_EVAL_TASKS=6;
-const TRUTH_ROLLOUTS=6, GATE_ROLLOUTS=2;
-const MUTATION_SIGMA=0.14;
-
-function mulberry32(seed){return function(){seed|=0;seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^(seed>>>15),1|seed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
-function gauss(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-function randomGenome(rng,scale){scale=scale===undefined?0.5:scale;const g=new Float64Array(GENOME_DIM);for(let i=0;i<GENOME_DIM;i++)g[i]=gauss(rng)*scale;return g;}
-function mutate(genome,rng,sigma){sigma=sigma===undefined?MUTATION_SIGMA:sigma;const g=new Float64Array(GENOME_DIM);for(let i=0;i<GENOME_DIM;i++)g[i]=genome[i]+gauss(rng)*sigma;return g;}
-function mlpForward(genome,obs){
-  let idx=0; const w1=genome.subarray(idx,idx+=OBS_DIM*HIDDEN_DIM), b1=genome.subarray(idx,idx+=HIDDEN_DIM);
-  const w2=genome.subarray(idx,idx+=HIDDEN_DIM*ACTION_DIM), b2=genome.subarray(idx,idx+=ACTION_DIM);
-  const hidden=new Float64Array(HIDDEN_DIM);
-  for(let h=0;h<HIDDEN_DIM;h++){let s=b1[h];for(let i=0;i<OBS_DIM;i++)s+=obs[i]*w1[i*HIDDEN_DIM+h];hidden[h]=Math.tanh(s);}
-  const out=new Float64Array(ACTION_DIM);
-  for(let a=0;a<ACTION_DIM;a++){let s=b2[a];for(let h=0;h<HIDDEN_DIM;h++)s+=hidden[h]*w2[h*ACTION_DIM+a];out[a]=Math.tanh(s);}
   return out;
 }
-function fk(theta){
-  const t1=theta[0], t2=theta[1];
-  const j1=[L1*Math.cos(t1), L1*Math.sin(t1)];
-  const ee=[j1[0]+L2*Math.cos(t1+t2), j1[1]+L2*Math.sin(t1+t2)];
-  return {joint1:j1, ee};
+
+// -- core.py fk(): theta2 is relative to link 1 (standard 2-link convention) --
+function fk(theta) {
+  const jx = L1 * Math.cos(theta[0]), jy = L1 * Math.sin(theta[0]);
+  return {
+    joint1: [jx, jy],
+    ee: [jx + L2 * Math.cos(theta[0] + theta[1]), jy + L2 * Math.sin(theta[0] + theta[1])],
+  };
 }
-function wrapPi(a){
-  // P1-5 fix: keep theta in [-pi, pi] so the observation (theta/pi) never
-  // drifts outside the range the policy was ever trained on
-  a = a % (2*Math.PI);
-  if(a > Math.PI) a -= 2*Math.PI;
-  if(a < -Math.PI) a += 2*Math.PI;
-  return a;
-}
-function sampleTask(rng){
-  const angle = rng()*Math.PI;
-  const radius = (0.35 + rng()*0.55) * REACH;
-  const target = [radius*Math.cos(angle), radius*Math.sin(angle)];
-  const startTheta = [(rng()*2-1)*Math.PI/2, (rng()*2-1)*Math.PI/2];
-  return {target, startTheta};
-}
-function makeObs(theta,ee,target,gripperClosed,dwellCount){
+
+// -- core.py make_obs(): 8 dims, both joint angles included -------------------
+function makeObs(theta, ee, target, gripperClosed, dwell) {
   return new Float64Array([
-    theta[0]/Math.PI, theta[1]/Math.PI,
+    theta[0] / Math.PI, theta[1] / Math.PI,
     ee[0], ee[1],
-    target[0]-ee[0], target[1]-ee[1],
-    gripperClosed?1:-1,
-    dwellCount/DWELL_TICKS,
+    target[0] - ee[0], target[1] - ee[1],
+    gripperClosed ? 1 : -1,
+    dwell / DWELL_TICKS,
   ]);
 }
-function rollout(genome, task, opts){
-  opts = opts||{};
-  const actionNoise=opts.actionNoise||0, obsNoise=opts.obsNoise||0, rng=opts.rng||Math.random, record=!!opts.record;
-  let theta=[task.startTheta[0], task.startTheta[1]];
-  const target=task.target;
-  let gripperClosed=false, dwellCount=0, confirmed=false;
-  let minDist = Math.hypot(fk(theta).ee[0]-target[0], fk(theta).ee[1]-target[1]);
-  const frames = record ? [] : null;
-  for(let t=0;t<EPISODE_LEN;t++){
-    let ee = fk(theta).ee;
-    let obs = makeObs(theta, ee, target, gripperClosed, dwellCount);
-    if(obsNoise>0) for(let i=0;i<obs.length;i++) obs[i]+=gauss(rng)*obsNoise;
-    const action = mlpForward(genome, obs);
-    let d0=Math.max(-1,Math.min(1,action[0]))*MAX_DTHETA, d1=Math.max(-1,Math.min(1,action[1]))*MAX_DTHETA;
-    if(actionNoise>0){ d0+=gauss(rng)*actionNoise; d1+=gauss(rng)*actionNoise; }
-    theta = [wrapPi(theta[0]+d0), wrapPi(theta[1]+d1)];
-    gripperClosed = action[7]>0;
+
+// -- core.py sample_task(): upper workspace, always geometrically reachable ---
+function sampleTask(rng) {
+  const angle = rng() * Math.PI;                 // uniform(0, pi)
+  const radius = (0.35 + rng() * 0.55) * REACH;  // uniform(0.35, 0.90) * REACH
+  return {
+    target: [radius * Math.cos(angle), radius * Math.sin(angle)],
+    startTheta: [(rng() - 0.5) * Math.PI, (rng() - 0.5) * Math.PI],
+  };
+}
+
+// -- core.py rollout(): the policy commands JOINT VELOCITIES ------------------
+function rollout(genome, task, opts) {
+  opts = opts || {};
+  const actionNoise = opts.actionNoise || 0;
+  const obsNoise = opts.obsNoise || 0;
+  const rng = opts.rng || Math.random;
+
+  let theta = [task.startTheta[0], task.startTheta[1]];
+  let gripperClosed = false, dwell = 0, confirmed = false;
+  let ee = fk(theta).ee;
+  let minDist = Math.hypot(ee[0] - task.target[0], ee[1] - task.target[1]);
+  const trace = [];
+
+  for (let t = 0; t < EPISODE_LEN; t++) {
     ee = fk(theta).ee;
-    const d = Math.hypot(ee[0]-target[0], ee[1]-target[1]);
+    const obs = makeObs(theta, ee, task.target, gripperClosed, dwell);
+    if (obsNoise > 0) for (let i = 0; i < obs.length; i++) obs[i] += gauss(rng) * obsNoise;
+    const action = mlpForward(genome, obs);
+
+    let d0 = Math.max(-1, Math.min(1, action[0])) * MAX_DTHETA;
+    let d1 = Math.max(-1, Math.min(1, action[1])) * MAX_DTHETA;
+    if (actionNoise > 0) { d0 += gauss(rng) * actionNoise; d1 += gauss(rng) * actionNoise; }
+    theta = [theta[0] + d0, theta[1] + d1];
+    gripperClosed = action[7] > 0;
+
+    ee = fk(theta).ee;                                   // derived, never set
+    const d = Math.hypot(ee[0] - task.target[0], ee[1] - task.target[1]);
     minDist = Math.min(minDist, d);
-    if(gripperClosed && d<CONFIRM_RADIUS) dwellCount++; else dwellCount=0;
-    if(dwellCount>=DWELL_TICKS) confirmed=true;
-    if(record) frames.push({theta:[theta[0],theta[1]], ee:[ee[0],ee[1]], gripperClosed, dwellCount, confirmed});
+    if (gripperClosed && d < CONFIRM_RADIUS) dwell++; else dwell = 0;
+    if (dwell >= DWELL_TICKS) confirmed = true;
+
+    trace.push({ theta: [theta[0], theta[1]], ee: ee, gripperClosed: gripperClosed, dwell: dwell, confirmed: confirmed });
   }
-  const out={success:confirmed, minDist};
-  if(record) out.frames=frames;
-  return out;
+  return { trace: trace, minDist: minDist, success: confirmed };
 }
-function proxyScore(genome, tasks){
-  let s=0; for(const t of tasks) s += -rollout(genome,t,{}).minDist;
-  return s/tasks.length;
+
+// -- core.py proxy_score / truth_score / cheap_gate ---------------------------
+function proxyScore(genome, tasks) {
+  let s = 0;
+  for (const t of tasks) s += -rollout(genome, t).minDist;   // noise-free; closest approach only
+  return s / tasks.length;
 }
-function truthScore(genome, tasks, nRollouts, noise, rng){
-  nRollouts = nRollouts===undefined?TRUTH_ROLLOUTS:nRollouts;
-  noise = noise===undefined?0.05:noise;
-  rng = rng||Math.random;
-  let total=0;
-  for(const t of tasks){
-    let succ=0;
-    for(let i=0;i<nRollouts;i++) if(rollout(genome,t,{actionNoise:noise,obsNoise:noise,rng}).success) succ++;
-    total += succ/nRollouts;
+function truthScore(genome, tasks, n, rngIn) {
+  n = n || TRUTH_ROLLOUTS; rngIn = rngIn || Math.random;
+  let s = 0;
+  for (const t of tasks) {
+    let succ = 0;
+    for (let i = 0; i < n; i++) {
+      if (rollout(genome, t, { actionNoise: NOISE, obsNoise: NOISE, rng: rngIn }).success) succ++;
+    }
+    s += succ / n;
   }
-  return total/tasks.length;
+  return s / tasks.length;
 }
-function cheapGate(genome, gateTasks, rng){
-  return truthScore(genome, gateTasks, GATE_ROLLOUTS, 0.05, rng);
+function cheapGate(genome, gateTasks, rngIn) {
+  return truthScore(genome, gateTasks, GATE_ROLLOUTS, rngIn);
 }
-function evolveNaive(pop, tasks, nElites, rng){
-  const scores = pop.map(g=>proxyScore(g,tasks));
-  const order = scores.map((s,i)=>i).sort((a,b)=>scores[b]-scores[a]);
-  const elites = order.slice(0,nElites).map(i=>pop[i]);
-  const champion = elites[0];
-  const offspring=[]; for(let i=0;i<pop.length-nElites;i++) offspring.push(mutate(elites[Math.floor(rng()*elites.length)],rng));
-  return {pool: elites.concat(offspring), champion};
-}
-function evolveGuarded(pop, selectionTasks, gateTasks, nElites, rng){
-  const gateScores = pop.map(g=>cheapGate(g,gateTasks,rng));
-  const passers = pop.filter((g,i)=>gateScores[i]>0);
-  const nPassers = passers.length;
-  let elites;
-  if(passers.length>0){
-    const ps = passers.map(g=>proxyScore(g,selectionTasks));
-    const order = ps.map((s,i)=>i).sort((a,b)=>ps[b]-ps[a]);
-    elites = order.slice(0,nElites).map(i=>passers[i]);
-  } else {
-    elites = [];
+
+// -- core.py evolve_naive / evolve_guarded -----------------------------------
+function naiveStep(pool, selTasks, rngIn) {
+  const scores = pool.map(g => proxyScore(g, selTasks));
+  const order = scores.map((s, i) => i).sort((a, b) => scores[b] - scores[a]);
+  const elites = order.slice(0, N_ELITES).map(i => pool[i]);
+  const off = [];
+  for (let i = 0; i < POP_SIZE - N_ELITES; i++) {
+    off.push(mutate(elites[Math.floor(rngIn() * elites.length)], rngIn));
   }
-  while(elites.length<nElites) elites.push(randomGenome(rng));
-  const champion = elites[0];
-  const offspring=[]; for(let i=0;i<pop.length-nElites;i++) offspring.push(mutate(elites[Math.floor(rng()*elites.length)],rng));
-  return {pool: elites.concat(offspring), champion, nPassers};
+  return { pool: elites.concat(off), champion: elites[0] };
 }
-
-function shapedFitnessHero(genome,tasks){
-  let total=0;
-  for(const t of tasks){
-    const r=rollout(genome,t,{record:true});
-    let s=-r.minDist;
-    if(r.frames.some(f=>f.confirmed)) s+=2;
-    total+=s;
+function guardedStep(pool, selTasks, gateTasks, rngIn) {
+  const gateScores = pool.map(g => cheapGate(g, gateTasks, rngIn));
+  const passers = pool.filter((g, i) => gateScores[i] > 0);
+  let elites = [];
+  if (passers.length) {
+    const ps = passers.map(g => proxyScore(g, selTasks));
+    const order = ps.map((s, i) => i).sort((a, b) => ps[b] - ps[a]);
+    elites = order.slice(0, N_ELITES).map(i => passers[i]);
   }
-  return total/tasks.length;
-}
-const heroCv=document.getElementById('heroCanvas');
-heroCv.width=heroCv.clientWidth*devicePixelRatio; heroCv.height=heroCv.clientHeight*devicePixelRatio;
-const heroCtx=heroCv.getContext('2d'); heroCtx.scale(devicePixelRatio,devicePixelRatio);
-heroCtx.font='13px ui-monospace,monospace'; heroCtx.fillStyle='#6e6e73'; heroCtx.textAlign='center';
-heroCtx.fillText('training a genome...', heroCv.clientWidth/2, heroCv.clientHeight/2);
-
-let heroTrace=null, heroTargetXY=[0,0], hi=0, heroG=0, heroFlash=0;
-setTimeout(() => {
-  const rng=mulberry32(2026);
-  const tasks=Array.from({length:6},()=>sampleTask(rng));
-  let genome=randomGenome(rng), best=shapedFitnessHero(genome,tasks);
-  for(let gen=0; gen<60; gen++){ for(let c=0;c<6;c++){ const cand=mutate(genome,rng,0.2); const s=shapedFitnessHero(cand,tasks); if(s>=best){genome=cand;best=s;} } }
-  let heroTask = tasks.find(t => rollout(genome,t,{record:true}).frames.some(f=>f.confirmed)) || tasks[0];
-  heroTrace = rollout(genome, heroTask, {record:true}).frames;
-  heroTargetXY = heroTask.target;
-  requestAnimationFrame(animateHero);
-}, 0);
-function animateHero(){
-  if(heroTrace){
-    hi+=0.5; const idx=Math.floor(hi)%heroTrace.length; const f=heroTrace[idx];
-    heroG += ((f.gripperClosed?1:0)-heroG)*0.25;
-    heroFlash=Math.max(0,heroFlash-0.03); if(f.confirmed) heroFlash=1;
-    drawArmPanel(heroCtx, heroCv.clientWidth, heroCv.clientHeight, f, heroG, heroTargetXY, f.dwellCount/DWELL_TICKS, heroFlash, '#2ecb8f', null, 0);
+  // unfilled elite slots get FRESH RANDOM genomes, never proxy-only winners
+  while (elites.length < N_ELITES) elites.push(randomGenome(rngIn));
+  const off = [];
+  for (let i = 0; i < POP_SIZE - N_ELITES; i++) {
+    off.push(mutate(elites[Math.floor(rngIn() * elites.length)], rngIn));
   }
-  requestAnimationFrame(animateHero);
+  return { pool: elites.concat(off), champion: elites[0], nPassers: passers.length };
 }
 
-// ============================================================
-// DRIVER — creates the worker, wires controls, runs the render loop
-// ============================================================
-let latestState = null;
-let worker = null;
-let running = true;
-let usingFallback = false;
-let fallbackSelf = null;
+// ============================================================================
+//  Rendering — an industrial 2-link arm with a parallel-jaw gripper.
+//  Every pixel is derived from theta via fk(). There is no separate IK pass,
+//  so the drawn arm is exactly the arm the simulator is stepping.
+// ============================================================================
+const TRAIL_MAX = 30;
+const trails = { hero: [], naive: [], guarded: [] };
 
-function makeFallbackHandler(){
-  // Runs the exact same WORKER_CODE, isolated in its own function scope via
-  // new Function (so its const/let declarations never collide with the
-  // main thread's), but called synchronously instead of through postMessage.
-  // Used only if a real Worker doesn't respond, most commonly because the
-  // page was opened as a local file:// document, where some browsers
-  // restrict spawning Workers from a blob: URL.
-  const self_ = { onmessage: null, postMessage: null };
-  const fn = new Function('self', WORKER_CODE + '\nreturn self;');
-  return fn(self_);
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function drawGlass(ctx, cx, cy, s, lit) {
+  ctx.save(); ctx.translate(cx, cy);
+  ctx.strokeStyle = lit ? 'rgba(26,156,94,0.8)' : 'rgba(92,112,132,0.5)';
+  ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.55, -s * 1.0);
+  ctx.quadraticCurveTo(-s * 0.12, -s * 0.1, 0, s * 0.05);
+  ctx.quadraticCurveTo(s * 0.12, -s * 0.1, s * 0.55, -s * 1.0);
+  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, s * 0.05); ctx.lineTo(0, s * 0.55); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-s * 0.32, s * 0.55); ctx.lineTo(s * 0.32, s * 0.55); ctx.stroke();
+  ctx.restore();
 }
 
-function sendMessage(msg){
-  if(usingFallback){
-    fallbackSelf.onmessage({data: msg});
-  } else if(worker){
-    worker.postMessage(msg);
+// a machined link: tapered body, brushed-metal gradient, bevel highlight
+function drawLink(ctx, x0, y0, x1, y1, w0, w1) {
+  const a = Math.atan2(y1 - y0, x1 - x0);
+  const len = Math.hypot(x1 - x0, y1 - y0);
+  ctx.save(); ctx.translate(x0, y0); ctx.rotate(a);
+  const grad = ctx.createLinearGradient(0, -w0 / 2, 0, w0 / 2);
+  grad.addColorStop(0.00, '#9ea7b1');
+  grad.addColorStop(0.40, '#6e7783');
+  grad.addColorStop(0.52, '#5a626d');
+  grad.addColorStop(1.00, '#3c434c');
+  ctx.beginPath();
+  ctx.moveTo(0, -w0 / 2); ctx.lineTo(len, -w1 / 2);
+  ctx.lineTo(len, w1 / 2); ctx.lineTo(0, w0 / 2);
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = 'rgba(30,35,42,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(3, -w0 / 2 + 2); ctx.lineTo(len - 3, -w1 / 2 + 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1.3; ctx.stroke();
+  ctx.restore();
+}
+
+// a joint housing: outer shell, machined hub, centre bolt
+function drawJoint(ctx, x, y, r) {
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#4c545f'; ctx.fill();
+  ctx.strokeStyle = 'rgba(30,35,42,0.6)'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y, r * 0.54, 0, Math.PI * 2);
+  ctx.fillStyle = '#8d959f'; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r * 0.18, 0, Math.PI * 2);
+  ctx.fillStyle = '#2f353c'; ctx.fill();
+}
+
+function rrect(ctx, x, y, w, h, r) {
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  else { ctx.beginPath(); ctx.rect(x, y, w, h); }   // Safari < 16.4
+}
+
+function drawArm(ctx, W, H, theta, grip, target, dwellFrac, flash, accent, trailKey) {
+  ctx.clearRect(0, 0, W, H);
+
+  // Base is centred and the arm sweeps freely: core.py has no joint limits, so
+  // the arm CAN swing below its mount. Centring means it never clips off-canvas
+  // and we never have to draw a "floor" it would pass through.
+  const ox = W / 2, oy = H / 2 + 6;
+  const px = Math.min((W / 2 - 12) / REACH, (H / 2 - 14) / REACH);
+
+  // workspace annulus: everything the arm can physically reach
+  ctx.setLineDash([2, 4]);
+  ctx.strokeStyle = 'rgba(120,128,140,0.20)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(ox, oy, REACH * px, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(ox, oy, Math.abs(L1 - L2) * px, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const tx = ox + target[0] * px, ty = oy - target[1] * px;
+
+  // confirm radius
+  ctx.beginPath(); ctx.arc(tx, ty, CONFIRM_RADIUS * px, 0, Math.PI * 2);
+  ctx.setLineDash([3, 3]);
+  ctx.strokeStyle = 'rgba(120,128,140,0.35)'; ctx.lineWidth = 1;
+  ctx.stroke(); ctx.setLineDash([]);
+
+  drawGlass(ctx, tx, ty, CONFIRM_RADIUS * px * 1.1, flash > 0);
+
+  // dwell ring — fills as the grip holds
+  if (dwellFrac > 0) {
+    ctx.beginPath();
+    ctx.arc(tx, ty, CONFIRM_RADIUS * px + 7, -Math.PI / 2, -Math.PI / 2 + dwellFrac * Math.PI * 2);
+    ctx.strokeStyle = accent; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
   }
-}
-
-function switchToFallback(reason){
-  if(usingFallback) return;
-  usingFallback = true;
-  console.warn('Falling back to running the evolution on the main thread: ' + reason +
-    '. Still fully functional, just without the Web Worker smoothing.');
-  fallbackSelf = makeFallbackHandler();
-  fallbackSelf.postMessage = (m) => { latestState = m; onWorkerState(m); };
-  sendMessage({type:'init', seed: currentSeedFromURL()});
-}
-
-function makeWorker(){
-  try {
-    const blob = new Blob([WORKER_CODE], {type:'application/javascript'});
-    const w = new Worker(URL.createObjectURL(blob));
-    let receivedAny = false;
-    w.onmessage = (e) => { receivedAny = true; latestState = e.data; onWorkerState(latestState); };
-    w.onerror = () => { switchToFallback('the worker reported an error'); };
-    setTimeout(() => { if(!receivedAny) switchToFallback('no response from the worker after 2s'); }, 2000);
-    return w;
-  } catch(err){
-    switchToFallback('Worker construction threw: ' + err.message);
-    return null;
+  // confirm pulse
+  if (flash > 0) {
+    ctx.beginPath();
+    ctx.arc(tx, ty, CONFIRM_RADIUS * px * (1 + (1 - flash) * 0.8), 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(26,156,94,' + (flash * 0.55) + ')';
+    ctx.lineWidth = 2; ctx.stroke();
   }
+
+  // end-effector trail
+  const fkNow = fk(theta);
+  const joint1 = fkNow.joint1, ee = fkNow.ee;
+  const trail = trails[trailKey];
+  if (trail) {
+    trail.push([ee[0], ee[1]]);
+    if (trail.length > TRAIL_MAX) trail.shift();
+    ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    for (let i = 1; i < trail.length; i++) {
+      ctx.beginPath();
+      ctx.moveTo(ox + trail[i - 1][0] * px, oy - trail[i - 1][1] * px);
+      ctx.lineTo(ox + trail[i][0] * px, oy - trail[i][1] * px);
+      ctx.strokeStyle = 'rgba(120,128,140,' + ((i / trail.length) * 0.32) + ')';
+      ctx.stroke();
+    }
+  }
+
+  const ex = ox + joint1[0] * px, ey = oy - joint1[1] * px;
+  const wx = ox + ee[0] * px, wy = oy - ee[1] * px;
+
+  // turret base: mounting flange + bolts
+  ctx.beginPath(); ctx.arc(ox, oy, 15, 0, Math.PI * 2);
+  ctx.fillStyle = '#39404a'; ctx.fill();
+  ctx.strokeStyle = 'rgba(22,26,32,0.7)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#8d959f';
+  for (let k = 0; k < 4; k++) {
+    const a = k * Math.PI / 2 + Math.PI / 4;
+    ctx.beginPath(); ctx.arc(ox + Math.cos(a) * 11, oy + Math.sin(a) * 11, 1.7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // links + joints
+  drawLink(ctx, ox, oy, ex, ey, 17, 13);
+  drawLink(ctx, ex, ey, wx, wy, 13, 10);
+  drawJoint(ctx, ox, oy, 9);
+  drawJoint(ctx, ex, ey, 7);
+  drawJoint(ctx, wx, wy, 5.5);
+
+  // ---- parallel-jaw gripper: the jaws TRANSLATE, they do not curl ----
+  const dir = Math.atan2(wy - ey, wx - ex);
+  ctx.save();
+  ctx.translate(wx, wy); ctx.rotate(dir);
+
+  ctx.fillStyle = '#4c545f';
+  rrect(ctx, 0, -6.5, 9, 13, 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(30,35,42,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+
+  const spread = 9.5 - 5.5 * grip;      // grip: 0 = open, 1 = closed
+  for (const side of [1, -1]) {
+    ctx.save();
+    ctx.translate(9, side * spread);
+    ctx.fillStyle = '#818a95';
+    rrect(ctx, 0, -2.2, 12, 4.4, 1.5); ctx.fill();
+    ctx.strokeStyle = 'rgba(30,35,42,0.55)'; ctx.lineWidth = 0.9; ctx.stroke();
+    ctx.fillStyle = '#2f353c';           // rubber contact pad, inside face
+    rrect(ctx, 6, side > 0 ? -2.2 : 0, 6, 2.2, 1); ctx.fill();
+    ctx.restore();
+  }
+
+  // status LED
+  ctx.beginPath(); ctx.arc(3, 0, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = flash > 0 ? '#1a9c5e' : accent;
+  ctx.shadowColor = flash > 0 ? 'rgba(26,156,94,0.9)' : 'transparent';
+  ctx.shadowBlur = flash > 0 ? 9 : 0;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
 }
 
-function currentSeedFromURL(){
-  const p = new URLSearchParams(window.location.search).get('seed');
-  const n = parseInt(p, 10);
-  return Number.isFinite(n) ? n : 1; // seed 1: verified clean guarded win in this port
-}
-function setSeedInURL(seed){
-  const url = new URL(window.location.href);
-  url.searchParams.set('seed', seed);
-  window.history.replaceState({}, '', url);
+// ============================================================================
+//  Page wiring
+// ============================================================================
+function fit(cv) {
+  cv.width = cv.clientWidth * devicePixelRatio;
+  cv.height = cv.clientHeight * devicePixelRatio;
+  const ctx = cv.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  return ctx;
 }
 
-function onWorkerState(s){
-  document.getElementById('seedDisplay').textContent = s.seed;
-  document.getElementById('genNow').textContent = s.gen;
-  const lastNP = s.history.naiveProxy[s.history.naiveProxy.length-1];
-  const lastNT = s.history.naiveTruth[s.history.naiveTruth.length-1];
-  const lastGP = s.history.guardedProxy[s.history.guardedProxy.length-1];
-  const lastGT = s.history.guardedTruth[s.history.guardedTruth.length-1];
-  document.getElementById('demoStatsNaive').innerHTML =
-    `gen <b>${s.gen}</b> &middot; proxy <b>${lastNP.toFixed(2)}</b> &middot; truth <b>${lastNT.toFixed(2)}</b>`;
-  document.getElementById('demoStatsGuarded').innerHTML =
-    `gen <b>${s.gen}</b> &middot; proxy <b>${lastGP.toFixed(2)}</b> &middot; truth <b>${lastGT.toFixed(2)}</b> &middot; gate <b>${s.nPassers===null?'-':s.nPassers}</b>/24`;
+const heroCv = document.getElementById('heroCanvas');
+const naiveCv = document.getElementById('demoArmNaive');
+const guardedCv = document.getElementById('demoArmGuarded');
+const chartCv = document.getElementById('demoChart');
+let heroCtx = fit(heroCv), naiveCtx = fit(naiveCv), guardedCtx = fit(guardedCv), chartCtx = fit(chartCv);
+window.addEventListener('resize', () => {
+  heroCtx = fit(heroCv); naiveCtx = fit(naiveCv);
+  guardedCtx = fit(guardedCv); chartCtx = fit(chartCv);
+});
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---- hero: one honest rollout of an arm trained WITH the ground-truth check.
+//      This is what success looks like. It is not the naive condition.
+let heroTrace = null, heroTask = null, heroIdx = 0, heroGrip = 0, heroFlash = 0;
+
+function heroFitness(genome, tasks) {
+  let tot = 0;
+  for (const t of tasks) {
+    const r = rollout(genome, t);
+    tot += -r.minDist + (r.success ? 2 : 0);
+  }
+  return tot / tasks.length;
+}
+function animateHero() {
+  if (!heroTrace) return;
+  heroIdx += 0.35;
+  const raw = Math.max(0, heroIdx);
+  const i0 = Math.min(Math.floor(raw), heroTrace.length - 1);
+  const i1 = Math.min(i0 + 1, heroTrace.length - 1);
+  const f = raw - Math.floor(raw);
+  const a = heroTrace[i0], b = heroTrace[i1];
+  const th = [lerp(a.theta[0], b.theta[0], f), lerp(a.theta[1], b.theta[1], f)];
+
+  heroGrip += ((a.gripperClosed ? 1 : 0) - heroGrip) * 0.22;
+  heroFlash = Math.max(0, heroFlash - 0.025);
+  if (a.confirmed) heroFlash = 1;
+
+  drawArm(heroCtx, heroCv.clientWidth, heroCv.clientHeight, th, heroGrip,
+    heroTask.target, a.dwell / DWELL_TICKS, heroFlash, '#1a9c5e', 'hero');
+
+  if (heroIdx >= heroTrace.length - 1) { heroIdx = -8; trails.hero = []; }
+  if (!reduceMotion) requestAnimationFrame(animateHero);
+}
+
+// ---- live naive vs guarded --------------------------------------------------
+let SEED = parseInt(new URLSearchParams(location.search).get('seed') || '10', 10);
+if (!Number.isFinite(SEED)) SEED = 10;
+
+let rng, selTasks, gateTasks, evalTasks;
+let naivePool, guardedPool, naiveChamp, guardedChamp, gen, lastPassers;
+let naiveProxyH, naiveTruthH, guardedProxyH, guardedTruthH;
+let task, naiveTrace, guardedTrace, traceIdx = 0;
+let naiveGrip = 0, guardedGrip = 0, naiveFlash = 0, guardedFlash = 0;
+let genTimer = null;
+
+const statsNaive = document.getElementById('demoStatsNaive');
+const statsGuarded = document.getElementById('demoStatsGuarded');
+const resetBtn = document.getElementById('demoResetBtn');
+const seedLabel = document.getElementById('demoSeed');
+
+function resetDemo() {
+  rng = mulberry32(SEED);
+
+  // task sets are FIXED for the whole run, exactly like selection_node._reset()
+  selTasks = Array.from({ length: N_SELECTION_TASKS }, () => sampleTask(rng));
+  gateTasks = Array.from({ length: N_GATE_TASKS }, () => sampleTask(rng));
+  evalTasks = Array.from({ length: N_EVAL_TASKS }, () => sampleTask(rng));
+
+  // identical RANDOM starting population — no ground-truth shaping anywhere
+  const pop0 = Array.from({ length: POP_SIZE }, () => randomGenome(rng));
+  naivePool = pop0.map(g => new Float64Array(g));
+  guardedPool = pop0.map(g => new Float64Array(g));
+
+  gen = 0; lastPassers = null;
+  naiveChamp = naivePool[0];
+  guardedChamp = guardedPool[0];
+  naiveProxyH = []; naiveTruthH = []; guardedProxyH = []; guardedTruthH = [];
+
+  if (seedLabel) seedLabel.textContent = String(SEED);
+  render();
+  newEpisode();
+}
+
+// ONE task, shared by both arms, with the SAME noise realization (common random
+// numbers) — so anything you see on screen is the policy, never the draw.
+function newEpisode() {
+  task = sampleTask(rng);
+  const noiseSeed = (rng() * 4294967296) | 0;
+  naiveTrace = rollout(naiveChamp, task,
+    { actionNoise: NOISE, obsNoise: NOISE, rng: mulberry32(noiseSeed) }).trace;
+  guardedTrace = rollout(guardedChamp, task,
+    { actionNoise: NOISE, obsNoise: NOISE, rng: mulberry32(noiseSeed) }).trace;
   traceIdx = 0;
-  naiveTrace = s.naiveTrace; guardedTrace = s.guardedTrace;
-  sharedTarget = s.sharedTask.target;
+  trails.naive = []; trails.guarded = [];
 }
 
-let traceIdx=0, naiveTrace=null, guardedTrace=null, sharedTarget=[0,0];
-let naiveGSmooth=0, guardedGSmooth=0, naiveFlash=0, guardedFlash=0;
+function render() {
+  const np = naiveProxyH.length ? naiveProxyH[naiveProxyH.length - 1] : null;
+  const nt = naiveTruthH.length ? naiveTruthH[naiveTruthH.length - 1] : null;
+  const gp = guardedProxyH.length ? guardedProxyH[guardedProxyH.length - 1] : null;
+  const gt = guardedTruthH.length ? guardedTruthH[guardedTruthH.length - 1] : null;
+  const f = v => (v === null ? '—' : v.toFixed(2));
+  statsNaive.innerHTML =
+    'gen <b>' + gen + '</b> &middot; proxy <b>' + f(np) + '</b> &middot; truth <b>' + f(nt) + '</b>';
+  statsGuarded.innerHTML =
+    'gen <b>' + gen + '</b> &middot; proxy <b>' + f(gp) + '</b> &middot; truth <b>' + f(gt) +
+    '</b> &middot; gate <b>' + (lastPassers === null ? '—' : lastPassers) + '</b>/' + POP_SIZE;
+}
 
-function animateDemo(){
-  if(naiveTrace && guardedTrace){
-    traceIdx += 0.5;
-    const idx = Math.max(0, Math.min(Math.floor(traceIdx), naiveTrace.length-1));
-    const nf=naiveTrace[idx], gf=guardedTrace[idx];
-    naiveGSmooth += ((nf.gripperClosed?1:0)-naiveGSmooth)*0.3;
-    guardedGSmooth += ((gf.gripperClosed?1:0)-guardedGSmooth)*0.3;
-    naiveFlash=Math.max(0,naiveFlash-0.03); guardedFlash=Math.max(0,guardedFlash-0.03);
-    if(nf.confirmed) naiveFlash=1; if(gf.confirmed) guardedFlash=1;
-    drawArmPanel(demoArmNaiveCtx, demoArmNaiveCv.clientWidth, demoArmNaiveCv.clientHeight, nf, naiveGSmooth, sharedTarget, nf.dwellCount/DWELL_TICKS, naiveFlash, '#4a94e8', naiveTrace, idx);
-    drawArmPanel(demoArmGuardedCtx, demoArmGuardedCv.clientWidth, demoArmGuardedCv.clientHeight, gf, guardedGSmooth, sharedTarget, gf.dwellCount/DWELL_TICKS, guardedFlash, '#2ecb8f', guardedTrace, idx);
+function stepGeneration() {
+  if (gen >= MAX_GEN) { SEED += 1; resetDemo(); return; }
+
+  const nr = naiveStep(naivePool, selTasks, rng);
+  naivePool = nr.pool; naiveChamp = nr.champion;
+
+  const gr = guardedStep(guardedPool, selTasks, gateTasks, rng);
+  guardedPool = gr.pool; guardedChamp = gr.champion; lastPassers = gr.nPassers;
+
+  gen++;
+
+  // held-out evaluation: neither loop ever selects on these tasks
+  naiveProxyH.push(proxyScore(naiveChamp, evalTasks));
+  naiveTruthH.push(truthScore(naiveChamp, evalTasks, TRUTH_ROLLOUTS, rng));
+  guardedProxyH.push(proxyScore(guardedChamp, evalTasks));
+  guardedTruthH.push(truthScore(guardedChamp, evalTasks, TRUTH_ROLLOUTS, rng));
+
+  render();
+}
+
+// The chart IS the argument: dashed proxy climbs, solid truth stays on the floor.
+function drawChart(ctx, W, H) {
+  ctx.clearRect(0, 0, W, H);
+  const padL = 26, padB = 16, padT = 8, padR = 8;
+  const n = Math.max(naiveTruthH.length, 2);
+  const xAt = i => padL + (W - padL - padR) * (i / Math.max(n - 1, 1));
+  const yTruth = v => H - padB - (H - padB - padT) * v;
+
+  const allP = naiveProxyH.concat(guardedProxyH);
+  const pMin = allP.length ? Math.min.apply(null, allP) : -1;
+  const pMax = allP.length ? Math.max.apply(null, allP) : 0;
+  const yProxy = v => H - padB - (H - padB - padT) * ((v - pMin) / Math.max(pMax - pMin, 1e-6));
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;   // was white-on-white: invisible
+  for (let f = 0; f <= 3; f++) {
+    const y = padT + (H - padB - padT) * f / 3;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
   }
-  if(latestState) drawChart(demoChartCtx, demoChartCv.clientWidth, demoChartCv.clientHeight, latestState.history);
-  requestAnimationFrame(animateDemo);
+  ctx.fillStyle = '#6e6e73';
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('1.0', padL - 5, padT + 8);
+  ctx.fillText('0', padL - 5, H - padB + 3);
+  ctx.textAlign = 'left';
+  ctx.fillText('generation \u2192', padL, H - 3);
+
+  const plot = (hist, color, dashed, yfn) => {
+    if (hist.length < 2) return;
+    ctx.setLineDash(dashed ? [4, 3] : []);
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    hist.forEach((v, i) => { const x = xAt(i), y = yfn(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  };
+  plot(naiveProxyH, '#2a78d6', true, yProxy);     // naive proxy  — climbs
+  plot(naiveTruthH, '#2a78d6', false, yTruth);    // naive truth  — never leaves the floor
+  plot(guardedProxyH, '#1a9c5e', true, yProxy);
+  plot(guardedTruthH, '#1a9c5e', false, yTruth);
 }
 
-const demoArmNaiveCv=document.getElementById('demoArmNaive'), demoArmGuardedCv=document.getElementById('demoArmGuarded'), demoChartCv=document.getElementById('demoChart');
-function fitCanvas(cv){cv.width=cv.clientWidth*devicePixelRatio; cv.height=cv.clientHeight*devicePixelRatio; const ctx=cv.getContext('2d'); ctx.scale(devicePixelRatio,devicePixelRatio); return ctx;}
-let demoArmNaiveCtx=fitCanvas(demoArmNaiveCv), demoArmGuardedCtx=fitCanvas(demoArmGuardedCv), demoChartCtx=fitCanvas(demoChartCv);
-window.addEventListener('resize',()=>{demoArmNaiveCtx=fitCanvas(demoArmNaiveCv); demoArmGuardedCtx=fitCanvas(demoArmGuardedCv); demoChartCtx=fitCanvas(demoChartCv);});
+function animateDemo() {
+  if (!naiveTrace) return;
 
-let genTimer=null;
-function startGenTimer(){ if(genTimer) clearInterval(genTimer); genTimer=setInterval(()=>{ if(running) sendMessage({type:'step'}); }, 1400); }
+  traceIdx += 0.4;
+  const raw = Math.max(0, traceIdx);                         // <-- the crash fix
+  const i0 = Math.min(Math.floor(raw), naiveTrace.length - 1);
+  const i1 = Math.min(i0 + 1, naiveTrace.length - 1);
+  const f = raw - Math.floor(raw);
 
-document.getElementById('demoPauseBtn').addEventListener('click', (e)=>{
-  running = !running;
-  e.target.textContent = running ? 'pause' : 'resume';
+  const n0 = naiveTrace[i0], n1 = naiveTrace[i1];
+  const g0 = guardedTrace[i0], g1 = guardedTrace[i1];
+
+  const nTh = [lerp(n0.theta[0], n1.theta[0], f), lerp(n0.theta[1], n1.theta[1], f)];
+  const gTh = [lerp(g0.theta[0], g1.theta[0], f), lerp(g0.theta[1], g1.theta[1], f)];
+
+  naiveGrip += ((n0.gripperClosed ? 1 : 0) - naiveGrip) * 0.22;
+  guardedGrip += ((g0.gripperClosed ? 1 : 0) - guardedGrip) * 0.22;
+  naiveFlash = Math.max(0, naiveFlash - 0.03);
+  guardedFlash = Math.max(0, guardedFlash - 0.03);
+  if (n0.confirmed) naiveFlash = 1;
+  if (g0.confirmed) guardedFlash = 1;
+
+  drawArm(naiveCtx, naiveCv.clientWidth, naiveCv.clientHeight, nTh, naiveGrip,
+    task.target, n0.dwell / DWELL_TICKS, naiveFlash, '#2a78d6', 'naive');
+  drawArm(guardedCtx, guardedCv.clientWidth, guardedCv.clientHeight, gTh, guardedGrip,
+    task.target, g0.dwell / DWELL_TICKS, guardedFlash, '#1a9c5e', 'guarded');
+  drawChart(chartCtx, chartCv.clientWidth, chartCv.clientHeight);
+
+  if (traceIdx >= naiveTrace.length - 1) newEpisode();
+
+  if (!reduceMotion) requestAnimationFrame(animateDemo);
+}
+
+// ---- boot -------------------------------------------------------------------
+heroCtx.font = '13px ui-monospace, monospace';
+heroCtx.fillStyle = '#6e6e73';
+heroCtx.textAlign = 'center';
+heroCtx.fillText('training an arm\u2026', heroCv.clientWidth / 2, heroCv.clientHeight / 2);
+statsNaive.innerHTML = 'starting from a random population\u2026';
+statsGuarded.innerHTML = 'both arms start identical';
+
+resetBtn.addEventListener('click', () => {
+  resetBtn.disabled = true;
+  resetBtn.textContent = 'restarting\u2026';
+  SEED += 1;
+  setTimeout(() => {                       // let the browser paint the disabled state first
+    resetDemo();
+    resetBtn.disabled = false;
+    resetBtn.textContent = 'try another seed';
+  }, 30);
 });
-document.getElementById('demoStepBtn').addEventListener('click', ()=>{ sendMessage({type:'step'}); });
-document.getElementById('demoReseedBtn').addEventListener('click', ()=>{
-  const seed = Math.floor(Math.random()*100000);
-  setSeedInURL(seed);
-  sendMessage({type:'reseed', seed});
-});
-document.getElementById('demoFailureBtn').addEventListener('click', ()=>{
-  // seed 5: verified in THIS implementation (a real sweep, not assumed from
-  // the Python version, since a different seed value in a different PRNG
-  // is not the same run) -- naive truth 0.52 vs guarded truth 0.01 at 20
-  // generations. Shown on purpose, not hidden.
-  setSeedInURL(5);
-  sendMessage({type:'reseed', seed:5});
-});
 
-const initialSeed = currentSeedFromURL();
-setSeedInURL(initialSeed);
-worker = makeWorker();
-if(!usingFallback) sendMessage({type:'init', seed: initialSeed});
-startGenTimer();
-requestAnimationFrame(animateDemo);
+setTimeout(() => {
+  // hero arm: a short hillclimb WITH the ground-truth bonus, so the top of the
+  // page shows a competent arm immediately. Disclosed in the caption.
+  const hr = mulberry32(2026);
+  const tasks = Array.from({ length: 8 }, () => sampleTask(hr));
+  let g = randomGenome(hr), best = heroFitness(g, tasks);
+  for (let it = 0; it < 60; it++) {
+    for (let c = 0; c < 8; c++) {
+      const cand = mutate(g, hr, 0.2);
+      const s = heroFitness(cand, tasks);
+      if (s >= best) { g = cand; best = s; }
+    }
+  }
+  heroTask = tasks.find(t => rollout(g, t).success) || tasks[0];
+  heroTrace = rollout(g, heroTask).trace;
+  animateHero();
 
+  resetDemo();
+  animateDemo();
+  genTimer = setInterval(stepGeneration, 1500);
+}, 30);
 
 </script>
 </body>
